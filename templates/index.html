@@ -2,11 +2,9 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <!-- App jaisa feel dene ke liye (zoom lock) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SarthakRobo EVS Class</title>
     
-    <!-- PWA / App Download Links -->
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#f4f7f6">
     <meta name="mobile-web-app-capable" content="yes">
@@ -16,54 +14,80 @@
     <style>
         body { 
             font-family: Arial, sans-serif; background-color: #f4f7f6; 
-            text-align: center; padding: 15px; color: #0000FF; margin: 0;
+            text-align: center; padding: 10px; color: #0000FF; margin: 0;
+            box-sizing: border-box;
         }
-        #header { font-size: 26px; font-weight: bold; color: #333; margin-bottom: 20px; margin-top: 10px; }
+        /* स्मार्ट हेडर साइज़ */
+        #header { font-size: clamp(20px, 5vw, 26px); font-weight: bold; color: #333; margin: 5px 0 15px 0; }
         
-        /* Photos Container */
+        /* फोटो कंटेनर */
         .photo-container {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
+        /* फोटो स्क्रीन के हिसाब से छोटी-बड़ी होगी */
         .profile-pic { 
-            width: 120px; 
-            height: 120px; 
+            width: clamp(80px, 20vw, 120px); 
+            height: clamp(80px, 20vw, 120px); 
             object-fit: cover; 
             border-radius: 50%; 
-            border: 4px solid #007bff; 
+            border: 3px solid #007bff; 
             transition: all 0.3s ease; 
         }
         
-        /* Talking Animation */
+        /* बाउंस एनीमेशन */
         .talking { animation: bounceGlow 0.5s infinite alternate; }
         @keyframes bounceGlow {
             0% { transform: scale(1) translateY(0); box-shadow: 0 0 10px #007bff; }
             100% { transform: scale(1.1) translateY(-8px); box-shadow: 0 0 25px #28a745; }
         }
 
+        /* मेन बॉक्स */
         #slide-container { 
-            background: white; padding: 25px; border-radius: 10px; 
+            background: white; padding: 15px; border-radius: 10px; 
             border: 2px solid red; border-left: 8px solid red; 
             box-shadow: 0px 4px 15px rgba(0,0,0,0.1); max-width: 800px; 
-            margin: auto; min-height: 250px; display: none;
+            width: 95%; margin: auto; display: none; box-sizing: border-box;
         }
         
-        h1 { color: #d9534f; font-size: 24px; }
-        #answer { font-size: 20px; line-height: 1.6; color: #0000FF; font-weight: bold; display: none; margin-top:20px; }
+        h1 { color: #d9534f; font-size: clamp(18px, 4vw, 24px); margin: 10px 0; }
+        #answer { font-size: clamp(16px, 3.5vw, 20px); line-height: 1.5; color: #0000FF; font-weight: bold; display: none; margin-top:15px; }
         
+        /* स्मार्ट बटन */
         .btn { 
-            padding: 12px 25px; font-size: 18px; margin: 10px; cursor: pointer; 
+            padding: 10px 15px; font-size: clamp(14px, 3.5vw, 18px); cursor: pointer; 
             border: none; border-radius: 8px; font-weight: bold; color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .btn:disabled { background-color: #cccccc; cursor: not-allowed; box-shadow: none; }
         
-        #startBtn { background-color: #28a745; font-size: 22px; padding: 15px 30px; margin-top: 20px; }
-        #actionBtn { background-color: #ff9800; font-size: 20px; width: 100%; margin-top:20px; }
-        .nav-btn { background-color: #007bff; }
-        .controls { margin-top: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        #startBtn { background-color: #28a745; font-size: 20px; padding: 15px 30px; margin-top: 20px; }
+        #actionBtn { background-color: #ff9800; width: 100%; margin-top:15px; padding: 12px; font-size: clamp(16px, 4vw, 20px); }
+        
+        /* नीचे के कंट्रोल्स को एक लाइन में सेट करना */
+        .controls { 
+            margin-top: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 10px;
+        }
+        .nav-btn { background-color: #007bff; flex: 1; padding: 12px 0; }
+        .auto-play-label { flex: 1; font-size: clamp(14px, 3.5vw, 16px); color:#333; font-weight: bold; }
+
+        /* आड़े फोन (Landscape) के लिए खास सेटिंग ताकि कुछ न कटे */
+        @media (max-height: 500px) {
+            #header { margin: 2px 0 5px 0; font-size: 18px; }
+            .profile-pic { width: 60px; height: 60px; border-width: 2px;}
+            #slide-container { padding: 10px; margin-bottom: 10px; }
+            h1 { font-size: 16px; margin: 5px 0;}
+            #answer { font-size: 14px; margin-top: 5px; }
+            .controls { margin-top: 10px; }
+            .btn { padding: 8px; }
+            #actionBtn { padding: 8px; margin-top: 10px;}
+        }
     </style>
 </head>
 <body>
@@ -85,7 +109,7 @@
         
         <div class="controls">
             <button id="prevBtn" class="btn nav-btn" onclick="changeSlide(-1)">◀ पिछला</button>
-            <label style="font-size: 16px; color:#333; margin: 10px 0;">
+            <label class="auto-play-label">
                 <input type="checkbox" id="autoPlayToggle" checked> Auto-Play
             </label>
             <button id="nextBtn" class="btn nav-btn" onclick="changeSlide(1)">अगला ▶</button>
