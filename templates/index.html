@@ -28,27 +28,24 @@
         .view.active { display: block; animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Top Bar */
         .top-bar { background: var(--card-bg); padding: 15px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display:flex; justify-content: space-between; align-items:center;}
         .top-bar h1 { margin: 0; font-size: clamp(18px, 4vw, 22px); color: var(--primary); display: flex; align-items: center; gap: 10px; }
         .top-bar img { width: 35px; border-radius: 50%; }
 
-        /* Theme Button */
         .theme-btn { background: #333; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; }
         body.dark-mode .theme-btn { background: #facc15; color:#000; }
 
-        /* Dashboard Cards */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 900px; margin: auto; }
         .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.3s; text-align: left; border: 1px solid var(--border-color); }
         .card:hover { transform: translateY(-5px); }
         .card.evs { border-top: 5px solid #28a745; }
-        .card.english { border-top: 5px solid var(--primary); opacity: 0.7; }
+        .card.hindi { border-top: 5px solid #007bff; } /* Naya Hindi Card Blue Color */
         .card.maths { border-top: 5px solid #dc3545; opacity: 0.7; }
         .card h2 { margin: 0 0 10px 0; font-size: 22px; color: var(--text-color); }
         .card p { color: #64748b; font-size: 14px; margin-bottom: 15px; }
         .badge { background: #ffeeba; color: #856404; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge.active-badge { background: #d4edda; color: #155724; } /* Green badge for active subjects */
 
-        /* Index Grid (1.1, 1.2 Layout) */
         .index-title { font-size: 18px; margin-bottom: 15px; font-weight:bold; }
         .index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; max-width: 800px; margin: auto; max-height: 65vh; overflow-y: auto; padding: 5px; }
         .index-btn { background: var(--card-bg); border: 2px solid var(--primary); color: var(--text-color); font-weight: bold; font-size: 14px; padding: 10px 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
@@ -56,7 +53,6 @@
         .index-btn.intro-btn { background: #e2e8f0; border-color: #94a3b8; color: #333; }
         body.dark-mode .index-btn.intro-btn { background: #334155; color: #cbd5e1; border-color: #475569; }
 
-        /* Slide Container */
         #slide-container-box { background: var(--card-bg); padding: 20px; border-radius: 15px; border-top: 6px solid #d9534f; box-shadow: 0px 8px 20px rgba(0,0,0,0.1); max-width: 800px; margin: auto; position: relative; }
         .photo-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
         .profile-pic { width: clamp(70px, 18vw, 100px); height: clamp(70px, 18vw, 100px); object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); transition: all 0.3s; }
@@ -87,15 +83,15 @@
         </div>
         
         <div class="dashboard-grid">
-            <div class="card evs" onclick="showIndex()">
+            <div class="card evs" onclick="showIndex('evs')">
                 <h2>🌍 EVS Teacher</h2>
                 <p>Voice Interactive EVS Chapters</p>
-                <span class="badge">4 Parts | 117 Q&A</span>
+                <span class="badge active-badge">4 Parts | 121 Slides</span>
             </div>
-            <div class="card english" onclick="alert('English AI - Coming Soon!')">
-                <h2>🔠 English Teacher</h2>
-                <p>Grammar & Speech</p>
-                <span class="badge" style="background:#e2e3e5;color:#333;">Coming Soon</span>
+            <div class="card hindi" onclick="showIndex('hindi')">
+                <h2>📖 Hindi Teacher</h2>
+                <p>Grammar, Q&A & Vocabulary</p>
+                <span class="badge active-badge">12 Parts | 88 Slides</span>
             </div>
             <div class="card maths" onclick="alert('Maths AI - Coming Soon!')">
                 <h2>🔢 Maths Teacher</h2>
@@ -105,22 +101,20 @@
         </div>
     </div>
 
-    <!-- VIEW 2: Dynamic Index (4 Partitions) -->
+    <!-- VIEW 2: Dynamic Index (Dono EVS aur Hindi ke liye kaam karega) -->
     <div id="view-index" class="view">
         <div class="top-bar">
-            <h1>🌍 EVS Chapters</h1>
+            <h1 id="index-page-title">🌍 EVS Chapters</h1>
             <button class="btn back-btn" onclick="showDashboard()">🏠 Back</button>
         </div>
         <p class="index-title" style="color:var(--text-color);">Select a Section or Question:</p>
-        <div class="index-grid" id="indexGrid">
-            <!-- Buttons Auto Generated Here -->
-        </div>
+        <div class="index-grid" id="indexGrid"></div>
     </div>
 
     <!-- VIEW 3: Slide Player -->
     <div id="view-slide" class="view">
         <div id="slide-container-box">
-            <button class="btn home-btn" onclick="showIndex()">✖ Close</button>
+            <button class="btn home-btn" onclick="showIndex(currentSubject)">✖ Close</button>
             
             <div class="photo-container">
                 <img class="profile-pic" id="pic1" src="/static/images/sarthak.png">
@@ -146,7 +140,8 @@
 
     <script>
         let currentSlide = 1;
-        const totalSlides = {{ total_slides }}; // Should be 121
+        let currentSubject = 'evs'; // Default subject
+        let totalSlides = 121; // Default
         let wakeLock = null; 
         
         function toggleTheme() {
@@ -160,7 +155,7 @@
             catch (err) { console.error(err); }
         }
 
-        // 🚀 SMART PARTITION LOGIC
+        // 🚀 SMART DUAL-SUBJECT PARTITION LOGIC
         function generateIndex() {
             const grid = document.getElementById("indexGrid");
             grid.innerHTML = "";
@@ -187,32 +182,77 @@
                 grid.appendChild(btn);
             }
 
-            // Partition 1: MCQs (1.1 to 1.32)
-            addHeader("Part 1: Multiple Choice Questions");
-            addBtn("Intro", slideCounter++, true);
-            for(let i=1; i<=32; i++) { addBtn(`1.${i}`, slideCounter++); }
+            if (currentSubject === 'evs') {
+                // EVS Partitions (Total 121)
+                addHeader("Part 1: Multiple Choice Questions");
+                addBtn("Intro", slideCounter++, true);
+                for(let i=1; i<=32; i++) { addBtn(`1.${i}`, slideCounter++); }
 
-            // Partition 2: True and False (2.1 to 2.33)
-            addHeader("Part 2: True or False");
-            addBtn("Intro", slideCounter++, true);
-            for(let i=1; i<=33; i++) { addBtn(`2.${i}`, slideCounter++); }
+                addHeader("Part 2: True or False");
+                addBtn("Intro", slideCounter++, true);
+                for(let i=1; i<=33; i++) { addBtn(`2.${i}`, slideCounter++); }
 
-            // Partition 3: Fill in the blanks (3.1 to 3.17)
-            addHeader("Part 3: Fill in the Blanks");
-            addBtn("Intro", slideCounter++, true);
-            for(let i=1; i<=17; i++) { addBtn(`3.${i}`, slideCounter++); }
+                addHeader("Part 3: Fill in the Blanks");
+                addBtn("Intro", slideCounter++, true);
+                for(let i=1; i<=17; i++) { addBtn(`3.${i}`, slideCounter++); }
 
-            // Partition 4: Q & A (4.1 to 4.35)
-            addHeader("Part 4: Question & Answers");
-            addBtn("Intro", slideCounter++, true);
-            for(let i=1; i<=35; i++) { addBtn(`4.${i}`, slideCounter++); }
+                addHeader("Part 4: Question & Answers");
+                addBtn("Intro", slideCounter++, true);
+                for(let i=1; i<=35; i++) { addBtn(`4.${i}`, slideCounter++); }
+
+            } else if (currentSubject === 'hindi') {
+                // Hindi Partitions (Total 88)
+                const hindiParts = [
+                    { title: "शब्दार्थ", count: 11 },
+                    { title: "समानार्थी", count: 9 },
+                    { title: "सही/गलत", count: 5 },
+                    { title: "विलोम", count: 8 },
+                    { title: "संज्ञा मिलान", count: 6 },
+                    { title: "वाक्य पूरे करो", count: 5 },
+                    { title: "स्थान मिलान", count: 5 },
+                    { title: "उचित विकल्प", count: 5 },
+                    { title: "काव्य पंक्ति", count: 3 },
+                    { title: "पत्र लेखन", count: 1 },
+                    { title: "उचित शब्द", count: 9 },
+                    { title: "प्रश्न उत्तर", count: 9 }
+                ];
+                
+                hindiParts.forEach((part, index) => {
+                    addHeader(`Part ${index + 1}: ${part.title}`);
+                    addBtn("Intro", slideCounter++, true);
+                    for(let i=1; i<=part.count; i++) { addBtn(`${index + 1}.${i}`, slideCounter++); }
+                });
+            }
         }
-        generateIndex();
 
         // --- View Switching Logic ---
-        function showDashboard() { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-dashboard').classList.add('active'); audioPlayer.pause(); }
-        function showIndex() { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-index').classList.add('active'); audioPlayer.pause(); requestWakeLock(); }
-        function startClass(slideNum) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-slide').classList.add('active'); currentSlide = slideNum; loadSlide(currentSlide); requestWakeLock(); }
+        function showDashboard() { 
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+            document.getElementById('view-dashboard').classList.add('active'); 
+            audioPlayer.pause(); 
+        }
+
+        function showIndex(subject) { 
+            currentSubject = subject;
+            totalSlides = (subject === 'evs') ? 121 : 88;
+            
+            // Set Title Based on Subject
+            document.getElementById('index-page-title').innerText = (subject === 'evs') ? "🌍 EVS Chapters" : "📖 Hindi Teacher";
+            
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+            document.getElementById('view-index').classList.add('active'); 
+            audioPlayer.pause(); 
+            requestWakeLock();
+            generateIndex(); // Draw buttons based on subject
+        }
+
+        function startClass(slideNum) { 
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+            document.getElementById('view-slide').classList.add('active'); 
+            currentSlide = slideNum; 
+            loadSlide(currentSlide); 
+            requestWakeLock(); 
+        }
 
         // --- Slide Loading Logic ---
         const audioPlayer = document.getElementById("audioPlayer");
@@ -223,7 +263,10 @@
             pic1.classList.remove("talking"); pic2.classList.remove("talking");
             document.getElementById("question").innerText = "Loading...";
 
-            fetch(`/get_slide/${slideNum}`).then(res => res.json()).then(data => {
+            // Dynamically select the correct backend route!
+            let fetchUrl = (currentSubject === 'evs') ? `/get_slide/${slideNum}` : `/get_hindi_slide/${slideNum}`;
+
+            fetch(fetchUrl).then(res => res.json()).then(data => {
                 if(data.error) return;
                 document.getElementById("question").innerText = data.question;
                 document.getElementById("answer").innerText = data.answer;
