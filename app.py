@@ -512,5 +512,38 @@ def get_hindi_slide(slide_id):
 # === HINDI TEACHER DATA AUR ROUTE YAHAN KHATAM HOTA HAI ===
 
 
+
+# === ENGLISH TEACHER ROUTE ===
+@app.route('/get_english_slide/<int:slide_id>')
+def get_english_slide(slide_id):
+    english_slides = []
+    if os.path.exists('english_data.txt'):
+        with open('english_data.txt', 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if line:
+                    if 'Answer:' in line:
+                        parts = line.split('Answer:')
+                        q_text = parts[0].strip()
+                        a_text = 'Answer: ' + parts[1].strip()
+                    else:
+                        q_text = line
+                        a_text = ''
+                    english_slides.append({
+                        'id': i+1,
+                        'is_heading': False,
+                        'question': q_text,
+                        'answer': a_text,
+                        'audio': f'/static/audios/english_slide_{i+1}.mp3'
+                    })
+    
+    for slide in english_slides:
+        if slide['id'] == slide_id:
+            return jsonify(slide)
+    return jsonify({'error': 'Slide not found'})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+

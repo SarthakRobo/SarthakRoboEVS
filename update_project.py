@@ -1,0 +1,271 @@
+import os
+
+# 1. app.py me English Backend jodna
+with open("app.py", "r", encoding="utf-8") as f:
+    app_content = f.read()
+
+if "/get_english_slide" not in app_content:
+    with open("app.py", "a", encoding="utf-8") as f:
+        f.write("\n")
+        f.write("# === ENGLISH TEACHER ROUTE ===\n")
+        f.write("@app.route('/get_english_slide/<int:slide_id>')\n")
+        f.write("def get_english_slide(slide_id):\n")
+        f.write("    english_slides = []\n")
+        f.write("    if os.path.exists('english_data.txt'):\n")
+        f.write("        with open('english_data.txt', 'r', encoding='utf-8') as file:\n")
+        f.write("            lines = [l.strip() for l in file.readlines() if l.strip()]\n")
+        f.write("            for i, line in enumerate(lines):\n")
+        f.write("                parts = line.split('Answer:')\n")
+        f.write("                if len(parts) == 2:\n")
+        f.write("                    english_slides.append({'id': i+1, 'is_heading': False, 'question': parts[0].strip(), 'answer': 'Answer:' + parts[1].strip(), 'audio': f'/static/audios/english_slide_{i+1}.mp3'})\n")
+        f.write("    for slide in english_slides:\n")
+        f.write("        if slide['id'] == slide_id:\n")
+        f.write("            return jsonify(slide)\n")
+        f.write("    return jsonify({'error': 'Slide not found'})\n")
+
+# 2. index.html me English Dashboard design jodna
+html_content = '''<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SarthakRobo AI Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#f0f4f8">
+    <style>
+        :root { --bg-color: #f0f4f8; --text-color: #333; --card-bg: #fff; --primary: #007bff; --border-color: transparent; }
+        body.dark-mode { --bg-color: #0f172a; --text-color: #e2e8f0; --card-bg: #1e293b; --primary: #38bdf8; --border-color: #334155; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; text-align: center; transition: background 0.4s, color 0.4s; }
+        .view { display: none; padding: 15px; }
+        .view.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .top-bar { background: var(--card-bg); padding: 15px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display:flex; justify-content: space-between; align-items:center;}
+        .top-bar h1 { margin: 0; font-size: clamp(18px, 4vw, 22px); color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .top-bar img { width: 35px; border-radius: 50%; }
+        .theme-btn { background: #333; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; }
+        body.dark-mode .theme-btn { background: #facc15; color:#000; }
+        .install-btn { background-color: #28a745; color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 10px; width: 100%; max-width: 900px; margin: 0 auto 20px auto; cursor: pointer; box-shadow: 0 4px 10px rgba(40,167,69,0.3); display: none; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 900px; margin: auto; }
+        .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.3s; text-align: left; border: 1px solid var(--border-color); }
+        .card:hover { transform: translateY(-5px); }
+        .card.evs { border-top: 5px solid #28a745; }
+        .card.hindi { border-top: 5px solid #007bff; }
+        .card.chatbot { border-top: 5px solid #8b5cf6; }
+        .card.english { border-top: 5px solid #f59e0b; }
+        .card h2 { margin: 0 0 10px 0; font-size: 22px; color: var(--text-color); }
+        .card p { color: #64748b; font-size: 14px; margin-bottom: 15px; }
+        .badge { background: #ffeeba; color: #856404; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge.active-badge { background: #d4edda; color: #155724; }
+        .badge.bot-badge { background: #ddd6fe; color: #5b21b6; }
+        .index-title { font-size: 18px; margin-bottom: 15px; font-weight:bold; }
+        .index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; max-width: 800px; margin: auto; max-height: 65vh; overflow-y: auto; padding: 5px; }
+        .index-btn { background: var(--card-bg); border: 2px solid var(--primary); color: var(--text-color); font-weight: bold; font-size: 14px; padding: 10px 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .index-btn:hover { background: var(--primary); color: #fff; }
+        .index-btn.intro-btn { background: #e2e8f0; border-color: #94a3b8; color: #333; }
+        body.dark-mode .index-btn.intro-btn { background: #334155; color: #cbd5e1; border-color: #475569; }
+        #slide-container-box { background: var(--card-bg); padding: 20px; border-radius: 15px; border-top: 6px solid #d9534f; box-shadow: 0px 8px 20px rgba(0,0,0,0.1); max-width: 800px; margin: auto; position: relative; }
+        .photo-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
+        .profile-pic { width: clamp(70px, 18vw, 100px); height: clamp(70px, 18vw, 100px); object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); transition: all 0.3s; }
+        .talking { animation: bounceGlow 0.5s infinite alternate; }
+        @keyframes bounceGlow { 0% { transform: scale(1) translateY(0); box-shadow: 0 0 10px var(--primary); } 100% { transform: scale(1.1) translateY(-8px); box-shadow: 0 0 25px #28a745; } }
+        h1.slide-q { color: #d9534f; font-size: clamp(16px, 4vw, 22px); margin: 10px 0; }
+        #answer { font-size: clamp(15px, 3.5vw, 18px); line-height: 1.5; color: var(--primary); font-weight: bold; display: none; margin-top:15px; }
+        .btn { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; }
+        .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+        #actionBtn { background-color: #f59e0b; width: 100%; margin-top:15px; padding: 12px; font-size: 18px; }
+        .controls { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .nav-btn { background-color: var(--primary); flex: 1; padding: 12px 0; }
+        .back-btn { background: #64748b; }
+        .home-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; padding: 5px 12px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="view-dashboard" class="view active">
+        <div class="top-bar">
+            <h1><img src="/static/images/sarthak.png" alt="Logo"> SarthakRobo AI</h1>
+            <button class="theme-btn" onclick="toggleTheme()">🌙 Sci-Fi</button>
+        </div>
+        
+        <button id="installAppBtn" class="install-btn">📱 Install SarthakRobo App</button>
+
+        <div class="dashboard-grid">
+            <div class="card evs" onclick="showIndex('evs')">
+                <h2>🌍 EVS Teacher</h2>
+                <p>Voice Interactive EVS Chapters</p>
+                <span class="badge active-badge">4 Parts | 121 Slides</span>
+            </div>
+            <div class="card hindi" onclick="showIndex('hindi')">
+                <h2>📖 Hindi Teacher</h2>
+                <p>Grammar, Q&A & Vocabulary</p>
+                <span class="badge active-badge">12 Parts | 88 Slides</span>
+            </div>
+            <div class="card chatbot" onclick="alert('Chatbot backend is being configured for Sarthak Patel. Coming in Phase 2!')">
+                <h2>🤖 SarthakRobo Chat</h2>
+                <p>Talk to your AI Assistant</p>
+                <span class="badge bot-badge">Judges Special Feature</span>
+            </div>
+            <div class="card english" onclick="showIndex('english')">
+                <h2>🔠 English Teacher</h2>
+                <p>Grammar & Speech</p>
+                <span class="badge active-badge">Testing | 5 Slides</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-index" class="view">
+        <div class="top-bar">
+            <h1 id="index-page-title">🌍 EVS Chapters</h1>
+            <button class="btn back-btn" onclick="showDashboard()">🏠 Back</button>
+        </div>
+        <p class="index-title" style="color:var(--text-color);">Select a Section or Question:</p>
+        <div class="index-grid" id="indexGrid"></div>
+    </div>
+
+    <div id="view-slide" class="view">
+        <div id="slide-container-box">
+            <button class="btn home-btn" onclick="showIndex(currentSubject)">✖ Close</button>
+            <div class="photo-container">
+                <img class="profile-pic" id="pic1" src="/static/images/sarthak.png">
+                <img class="profile-pic" id="pic2" src="/static/images/sarthak2.png">
+            </div>
+            <h1 class="slide-q" id="question">Loading...</h1>
+            <button id="actionBtn" class="btn" onclick="showAnswerAndPlay()">Show Answer & Audio</button>
+            <p id="answer"></p>
+            <div class="controls">
+                <button id="prevBtn" class="btn nav-btn" onclick="changeSlide(-1)">◀ Prev</button>
+                <label style="font-size:14px; font-weight:bold; color:var(--text-color);">
+                    <input type="checkbox" id="autoPlayToggle" checked> Auto
+                </label>
+                <button id="nextBtn" class="btn nav-btn" onclick="changeSlide(1)">Next ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer" style="display:none;"></audio>
+
+    <script>
+        let currentSlide = 1;
+        let currentSubject = 'evs'; 
+        let totalSlides = 121; 
+        let wakeLock = null; 
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-btn');
+            btn.innerText = document.body.classList.contains('dark-mode') ? "☀️ Light" : "🌙 Sci-Fi";
+        }
+
+        async function requestWakeLock() {
+            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }
+            catch (err) { console.error(err); }
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installAppBtn').style.display = 'block'; 
+        });
+
+        document.getElementById('installAppBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') { document.getElementById('installAppBtn').style.display = 'none'; }
+                deferredPrompt = null;
+            }
+        });
+
+        function generateIndex() {
+            const grid = document.getElementById("indexGrid");
+            grid.innerHTML = "";
+            let slideCounter = 1;
+
+            function addHeader(title) {
+                let hdr = document.createElement("div");
+                hdr.style.gridColumn = "1 / -1";
+                hdr.style.textAlign = "left";
+                hdr.style.fontWeight = "bold";
+                hdr.style.marginTop = "15px";
+                hdr.style.color = "var(--primary)";
+                hdr.style.borderBottom = "1px solid var(--border-color)";
+                hdr.style.paddingBottom = "5px";
+                hdr.innerText = title;
+                grid.appendChild(hdr);
+            }
+
+            function addBtn(label, sNum, isIntro = false) {
+                let btn = document.createElement("button");
+                btn.className = isIntro ? "index-btn intro-btn" : "index-btn";
+                btn.innerText = label;
+                btn.onclick = function() { startClass(sNum); };
+                grid.appendChild(btn);
+            }
+
+            if (currentSubject === 'evs') {
+                addHeader("Part 1: Multiple Choice Questions"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=32; i++) { addBtn(`1.${i}`, slideCounter++); }
+                addHeader("Part 2: True or False"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=33; i++) { addBtn(`2.${i}`, slideCounter++); }
+                addHeader("Part 3: Fill in the Blanks"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=17; i++) { addBtn(`3.${i}`, slideCounter++); }
+                addHeader("Part 4: Question & Answers"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=35; i++) { addBtn(`4.${i}`, slideCounter++); }
+            } else if (currentSubject === 'hindi') {
+                const hindiParts = [ { title: "शब्दार्थ", count: 11 }, { title: "समानार्थी", count: 9 }, { title: "सही/गलत", count: 5 }, { title: "विलोम", count: 8 }, { title: "संज्ञा मिलान", count: 6 }, { title: "वाक्य पूरे करो", count: 5 }, { title: "स्थान मिलान", count: 5 }, { title: "उचित विकल्प", count: 5 }, { title: "काव्य पंक्ति", count: 3 }, { title: "पत्र लेखन", count: 1 }, { title: "उचित शब्द", count: 9 }, { title: "प्रश्न उत्तर", count: 9 } ];
+                hindiParts.forEach((part, index) => { addHeader(`Part ${index + 1}: ${part.title}`); addBtn("Intro", slideCounter++, true); for(let i=1; i<=part.count; i++) { addBtn(`${index + 1}.${i}`, slideCounter++); } });
+            } else if (currentSubject === 'english') {
+                addHeader("Part 1: Teacher Style Testing");
+                for(let i=1; i<=5; i++) { addBtn(`1.${i}`, slideCounter++); }
+            }
+        }
+
+        function showDashboard() { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-dashboard').classList.add('active'); audioPlayer.pause(); }
+        function showIndex(subject) { 
+            currentSubject = subject; 
+            if(subject === 'evs') totalSlides = 121;
+            else if(subject === 'hindi') totalSlides = 88;
+            else if(subject === 'english') totalSlides = 5;
+
+            let title = "🌍 EVS Chapters";
+            if(subject === 'hindi') title = "📖 Hindi Teacher";
+            if(subject === 'english') title = "🔠 English Teacher";
+            
+            document.getElementById('index-page-title').innerText = title;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-index').classList.add('active'); 
+            audioPlayer.pause(); requestWakeLock(); generateIndex(); 
+        }
+        function startClass(slideNum) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-slide').classList.add('active'); currentSlide = slideNum; loadSlide(currentSlide); requestWakeLock(); }
+
+        const audioPlayer = document.getElementById("audioPlayer");
+        const pic1 = document.getElementById("pic1"); const pic2 = document.getElementById("pic2");
+
+        function loadSlide(slideNum) {
+            audioPlayer.pause(); audioPlayer.currentTime = 0; pic1.classList.remove("talking"); pic2.classList.remove("talking");
+            document.getElementById("question").innerText = "Loading...";
+            
+            let fetchUrl = `/get_slide/${slideNum}`;
+            if(currentSubject === 'hindi') fetchUrl = `/get_hindi_slide/${slideNum}`;
+            if(currentSubject === 'english') fetchUrl = `/get_english_slide/${slideNum}`;
+
+            fetch(fetchUrl).then(res => res.json()).then(data => {
+                if(data.error) return;
+                document.getElementById("question").innerText = data.question; document.getElementById("answer").innerText = data.answer; audioPlayer.src = data.audio;
+                if(data.is_heading) { document.getElementById("answer").style.display = "none"; document.getElementById("actionBtn").style.display = "none"; audioPlayer.play(); } 
+                else { document.getElementById("answer").style.display = "none"; document.getElementById("actionBtn").style.display = "block"; }
+                document.getElementById("prevBtn").disabled = (slideNum === 1); document.getElementById("nextBtn").disabled = (slideNum === totalSlides);
+            });
+        }
+
+        function showAnswerAndPlay() { document.getElementById("answer").style.display = "block"; document.getElementById("actionBtn").style.display = "none"; audioPlayer.play(); }
+
+        audioPlayer.onplay = function() { pic1.classList.add("talking"); pic2.classList.add("talking"); };
+        audioPlayer.onpause = function() { pic1.classList.remove("talking"); pic2.classList.remove("talking"); };
+        audioPlayer.onended = function() { pic1.classList.remove("talking"); pic2.classList.remove("talking"); if(document.getElementById("autoPlayToggle").checked && currentSlide < totalSlides) { setTimeout(() => { changeSlide(1); }, 1500); } };
+
+        function changeSlide(step) { let newSlide = currentSlide + step; if(newSlide >= 1 && newSlide <= totalSlides) { currentSlide = newSlide; loadSlide(currentSlide); } }
+        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
+    </script>
+</body>
+</html>'''
+
+with open("templates/index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("✅ Project me English Teacher successful add ho gaya!")

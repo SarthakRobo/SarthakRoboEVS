@@ -10,47 +10,38 @@
         :root { --bg-color: #f0f4f8; --text-color: #333; --card-bg: #fff; --primary: #007bff; --border-color: transparent; }
         body.dark-mode { --bg-color: #0f172a; --text-color: #e2e8f0; --card-bg: #1e293b; --primary: #38bdf8; --border-color: #334155; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; text-align: center; transition: background 0.4s, color 0.4s; }
-        
         .view { display: none; padding: 15px; }
         .view.active { display: block; animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .top-bar { background: var(--card-bg); padding: 15px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display:flex; justify-content: space-between; align-items:center;}
         .top-bar h1 { margin: 0; font-size: clamp(18px, 4vw, 22px); color: var(--primary); display: flex; align-items: center; gap: 10px; }
         .top-bar img { width: 35px; border-radius: 50%; }
-
         .theme-btn { background: #333; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; }
         body.dark-mode .theme-btn { background: #facc15; color:#000; }
-
         .install-btn { background-color: #28a745; color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 10px; width: 100%; max-width: 900px; margin: 0 auto 20px auto; cursor: pointer; box-shadow: 0 4px 10px rgba(40,167,69,0.3); display: none; }
-        
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 900px; margin: auto; }
         .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.3s; text-align: left; border: 1px solid var(--border-color); }
         .card:hover { transform: translateY(-5px); }
         .card.evs { border-top: 5px solid #28a745; }
         .card.hindi { border-top: 5px solid #007bff; }
         .card.chatbot { border-top: 5px solid #8b5cf6; }
-        .card.english { border-top: 5px solid #f59e0b; opacity: 0.7; }
+        .card.english { border-top: 5px solid #f59e0b; }
         .card h2 { margin: 0 0 10px 0; font-size: 22px; color: var(--text-color); }
         .card p { color: #64748b; font-size: 14px; margin-bottom: 15px; }
         .badge { background: #ffeeba; color: #856404; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .badge.active-badge { background: #d4edda; color: #155724; }
         .badge.bot-badge { background: #ddd6fe; color: #5b21b6; }
-
         .index-title { font-size: 18px; margin-bottom: 15px; font-weight:bold; }
         .index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; max-width: 800px; margin: auto; max-height: 65vh; overflow-y: auto; padding: 5px; }
         .index-btn { background: var(--card-bg); border: 2px solid var(--primary); color: var(--text-color); font-weight: bold; font-size: 14px; padding: 10px 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
         .index-btn:hover { background: var(--primary); color: #fff; }
         .index-btn.intro-btn { background: #e2e8f0; border-color: #94a3b8; color: #333; }
         body.dark-mode .index-btn.intro-btn { background: #334155; color: #cbd5e1; border-color: #475569; }
-
         #slide-container-box { background: var(--card-bg); padding: 20px; border-radius: 15px; border-top: 6px solid #d9534f; box-shadow: 0px 8px 20px rgba(0,0,0,0.1); max-width: 800px; margin: auto; position: relative; }
         .photo-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
         .profile-pic { width: clamp(70px, 18vw, 100px); height: clamp(70px, 18vw, 100px); object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); transition: all 0.3s; }
-        
         .talking { animation: bounceGlow 0.5s infinite alternate; }
         @keyframes bounceGlow { 0% { transform: scale(1) translateY(0); box-shadow: 0 0 10px var(--primary); } 100% { transform: scale(1.1) translateY(-8px); box-shadow: 0 0 25px #28a745; } }
-
         h1.slide-q { color: #d9534f; font-size: clamp(16px, 4vw, 22px); margin: 10px 0; }
         #answer { font-size: clamp(15px, 3.5vw, 18px); line-height: 1.5; color: var(--primary); font-weight: bold; display: none; margin-top:15px; }
         .btn { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; }
@@ -63,15 +54,12 @@
     </style>
 </head>
 <body>
-
-    <!-- VIEW 1: Dashboard -->
     <div id="view-dashboard" class="view active">
         <div class="top-bar">
             <h1><img src="/static/images/sarthak.png" alt="Logo"> SarthakRobo AI</h1>
             <button class="theme-btn" onclick="toggleTheme()">🌙 Sci-Fi</button>
         </div>
         
-        <!-- PWA Install Button (Sirf tab dikhega jab app install nahi hogi) -->
         <button id="installAppBtn" class="install-btn">📱 Install SarthakRobo App</button>
 
         <div class="dashboard-grid">
@@ -90,15 +78,14 @@
                 <p>Talk to your AI Assistant</p>
                 <span class="badge bot-badge">Judges Special Feature</span>
             </div>
-            <div class="card english" onclick="alert('English AI PDF Data Required. Coming in Phase 3!')">
+            <div class="card english" onclick="showIndex('english')">
                 <h2>🔠 English Teacher</h2>
                 <p>Grammar & Speech</p>
-                <span class="badge" style="background:#e2e3e5;color:#333;">Pending PDF</span>
+                <span class="badge active-badge">5 Parts | 115 Slides</span>
             </div>
         </div>
     </div>
 
-    <!-- VIEW 2: Dynamic Index -->
     <div id="view-index" class="view">
         <div class="top-bar">
             <h1 id="index-page-title">🌍 EVS Chapters</h1>
@@ -108,7 +95,6 @@
         <div class="index-grid" id="indexGrid"></div>
     </div>
 
-    <!-- VIEW 3: Slide Player -->
     <div id="view-slide" class="view">
         <div id="slide-container-box">
             <button class="btn home-btn" onclick="showIndex(currentSubject)">✖ Close</button>
@@ -148,12 +134,11 @@
             catch (err) { console.error(err); }
         }
 
-        // PWA Install Logic
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('installAppBtn').style.display = 'block'; // Button dikhao
+            document.getElementById('installAppBtn').style.display = 'block'; 
         });
 
         document.getElementById('installAppBtn').addEventListener('click', async () => {
@@ -199,13 +184,24 @@
             } else if (currentSubject === 'hindi') {
                 const hindiParts = [ { title: "शब्दार्थ", count: 11 }, { title: "समानार्थी", count: 9 }, { title: "सही/गलत", count: 5 }, { title: "विलोम", count: 8 }, { title: "संज्ञा मिलान", count: 6 }, { title: "वाक्य पूरे करो", count: 5 }, { title: "स्थान मिलान", count: 5 }, { title: "उचित विकल्प", count: 5 }, { title: "काव्य पंक्ति", count: 3 }, { title: "पत्र लेखन", count: 1 }, { title: "उचित शब्द", count: 9 }, { title: "प्रश्न उत्तर", count: 9 } ];
                 hindiParts.forEach((part, index) => { addHeader(`Part ${index + 1}: ${part.title}`); addBtn("Intro", slideCounter++, true); for(let i=1; i<=part.count; i++) { addBtn(`${index + 1}.${i}`, slideCounter++); } });
+            } else if (currentSubject === 'english') {
+                const engParts = [ { title: "Word Meanings", count: 20 }, { title: "MCQs", count: 25 }, { title: "True/False", count: 25 }, { title: "Fill in Blanks", count: 24 }, { title: "Question Answers", count: 16 } ];
+                engParts.forEach((part, index) => { addHeader(`Part ${index + 1}: ${part.title}`); addBtn("Intro", slideCounter++, true); for(let i=1; i<=part.count; i++) { addBtn(`${index + 1}.${i}`, slideCounter++); } });
             }
         }
 
         function showDashboard() { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-dashboard').classList.add('active'); audioPlayer.pause(); }
         function showIndex(subject) { 
-            currentSubject = subject; totalSlides = (subject === 'evs') ? 121 : 88;
-            document.getElementById('index-page-title').innerText = (subject === 'evs') ? "🌍 EVS Chapters" : "📖 Hindi Teacher";
+            currentSubject = subject; 
+            if(subject === 'evs') totalSlides = 121;
+            else if(subject === 'hindi') totalSlides = 88;
+            else if(subject === 'english') totalSlides = 115;
+
+            let title = "🌍 EVS Chapters";
+            if(subject === 'hindi') title = "📖 Hindi Teacher";
+            if(subject === 'english') title = "🔠 English Teacher";
+            
+            document.getElementById('index-page-title').innerText = title;
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-index').classList.add('active'); 
             audioPlayer.pause(); requestWakeLock(); generateIndex(); 
         }
@@ -217,7 +213,10 @@
         function loadSlide(slideNum) {
             audioPlayer.pause(); audioPlayer.currentTime = 0; pic1.classList.remove("talking"); pic2.classList.remove("talking");
             document.getElementById("question").innerText = "Loading...";
-            let fetchUrl = (currentSubject === 'evs') ? `/get_slide/${slideNum}` : `/get_hindi_slide/${slideNum}`;
+            
+            let fetchUrl = `/get_slide/${slideNum}`;
+            if(currentSubject === 'hindi') fetchUrl = `/get_hindi_slide/${slideNum}`;
+            if(currentSubject === 'english') fetchUrl = `/get_english_slide/${slideNum}`;
 
             fetch(fetchUrl).then(res => res.json()).then(data => {
                 if(data.error) return;
