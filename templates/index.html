@@ -1,240 +1,604 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SarthakRobo AI Dashboard</title>
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#f0f4f8">
-    <style>
-        :root { --bg-color: #f0f4f8; --text-color: #333; --card-bg: #fff; --primary: #007bff; --border-color: transparent; }
-        body.dark-mode { --bg-color: #0f172a; --text-color: #e2e8f0; --card-bg: #1e293b; --primary: #38bdf8; --border-color: #334155; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; text-align: center; transition: background 0.4s, color 0.4s; }
-        .view { display: none; padding: 15px; }
-        .view.active { display: block; animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .top-bar { background: var(--card-bg); padding: 15px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; display:flex; justify-content: space-between; align-items:center;}
-        .top-bar h1 { margin: 0; font-size: clamp(18px, 4vw, 22px); color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .top-bar img { width: 35px; border-radius: 50%; }
-        .theme-btn { background: #333; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold; }
-        body.dark-mode .theme-btn { background: #facc15; color:#000; }
-        .install-btn { background-color: #28a745; color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; border-radius: 10px; width: 100%; max-width: 900px; margin: 0 auto 20px auto; cursor: pointer; box-shadow: 0 4px 10px rgba(40,167,69,0.3); display: none; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 900px; margin: auto; }
-        .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.3s; text-align: left; border: 1px solid var(--border-color); }
-        .card:hover { transform: translateY(-5px); }
-        .card.evs { border-top: 5px solid #28a745; }
-        .card.hindi { border-top: 5px solid #007bff; }
-        .card.chatbot { border-top: 5px solid #8b5cf6; }
-        .card.english { border-top: 5px solid #f59e0b; }
-        .card h2 { margin: 0 0 10px 0; font-size: 22px; color: var(--text-color); }
-        .card p { color: #64748b; font-size: 14px; margin-bottom: 15px; }
-        .badge { background: #ffeeba; color: #856404; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-        .badge.active-badge { background: #d4edda; color: #155724; }
-        .badge.bot-badge { background: #ddd6fe; color: #5b21b6; }
-        .index-title { font-size: 18px; margin-bottom: 15px; font-weight:bold; }
-        .index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; max-width: 800px; margin: auto; max-height: 65vh; overflow-y: auto; padding: 5px; }
-        .index-btn { background: var(--card-bg); border: 2px solid var(--primary); color: var(--text-color); font-weight: bold; font-size: 14px; padding: 10px 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-        .index-btn:hover { background: var(--primary); color: #fff; }
-        .index-btn.intro-btn { background: #e2e8f0; border-color: #94a3b8; color: #333; }
-        body.dark-mode .index-btn.intro-btn { background: #334155; color: #cbd5e1; border-color: #475569; }
-        #slide-container-box { background: var(--card-bg); padding: 20px; border-radius: 15px; border-top: 6px solid #d9534f; box-shadow: 0px 8px 20px rgba(0,0,0,0.1); max-width: 800px; margin: auto; position: relative; }
-        .photo-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
-        .profile-pic { width: clamp(70px, 18vw, 100px); height: clamp(70px, 18vw, 100px); object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); transition: all 0.3s; }
-        .talking { animation: bounceGlow 0.5s infinite alternate; }
-        @keyframes bounceGlow { 0% { transform: scale(1) translateY(0); box-shadow: 0 0 10px var(--primary); } 100% { transform: scale(1.1) translateY(-8px); box-shadow: 0 0 25px #28a745; } }
-        h1.slide-q { color: #d9534f; font-size: clamp(16px, 4vw, 22px); margin: 10px 0; }
-        #answer { font-size: clamp(15px, 3.5vw, 18px); line-height: 1.5; color: var(--primary); font-weight: bold; display: none; margin-top:15px; }
-        .btn { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; }
-        .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
-        #actionBtn { background-color: #f59e0b; width: 100%; margin-top:15px; padding: 12px; font-size: 18px; }
-        .controls { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .nav-btn { background-color: var(--primary); flex: 1; padding: 12px 0; }
-        .back-btn { background: #64748b; }
-        .home-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; padding: 5px 12px; border-radius: 5px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SarthakRobo AI Dashboard</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#f0f4f8">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+:root { --bg-color: #f0f4f8; --text-color: #1e293b; --card-bg: #ffffff; --primary: #007bff; --border-color: #e2e8f0; }
+body.dark-mode { --bg-color: #0f172a; --text-color: #f1f5f9; --card-bg: #1e293b; --primary: #38bdf8; --border-color: #334155; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; text-align: center; overflow-x: hidden; }
+.view { display: none; padding: 12px; padding-bottom: 85px; }
+.view.active { display: block; }
+
+/* FULL SCREEN MOBILE LOCK FOR CHAT VIEW */
+#view-chat.active {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100vw;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: var(--bg-color);
+    z-index: 1000;
+}
+.chat-header {
+    background: var(--card-bg);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+}
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.chat-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary);
+    transition: transform 0.2s;
+}
+.chat-title-box { text-align: left; }
+.chat-title-box h2 { margin: 0; font-size: 16px; color: var(--primary); }
+.chat-title-box span { font-size: 11px; color: #28a745; font-weight: bold; }
+
+.lang-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.lang-btn {
+    flex: 1;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+}
+#chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+.chat-footer {
+    background: var(--card-bg);
+    padding: 10px 12px 14px 12px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+}
+#btn-voice {
+    width: 100%;
+    padding: 13px;
+    font-size: 17px;
+    font-weight: bold;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+}
+#chat-input {
+    flex: 1;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px solid #94a3b8;
+    font-size: 15px;
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* DASHBOARD & SLIDES */
+.top-bar { background: var(--card-bg); padding: 14px; border-radius: 0 0 18px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.top-bar h1 { margin: 0; font-size: clamp(18px, 4vw, 22px); color: var(--primary); display: flex; align-items: center; gap: 10px; }
+.top-bar img { width: 35px; height: 35px; object-fit: cover; border-radius: 50%; }
+.theme-btn { background: #333; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+body.dark-mode .theme-btn { background: #facc15; color: #000; }
+.install-btn { background-color: #28a745; color: white; border: none; padding: 14px; font-size: 17px; font-weight: bold; border-radius: 10px; width: 100%; max-width: 900px; margin: 0 auto 16px auto; cursor: pointer; display: none; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; max-width: 900px; margin: auto; }
+.card { background: var(--card-bg); border-radius: 18px; padding: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.06); cursor: pointer; text-align: left; border: 1px solid var(--border-color); }
+.card.evs { border-top: 5px solid #28a745; }
+.card.hindi { border-top: 5px solid #007bff; }
+.card.chatbot { border-top: 5px solid #8b5cf6; }
+.card.english { border-top: 5px solid #f59e0b; }
+.card h2 { margin: 0 0 8px 0; font-size: 20px; color: var(--text-color); }
+.card p { color: #64748b; font-size: 14px; margin-bottom: 12px; }
+.badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.badge.active-badge { background: #d4edda; color: #155724; }
+.badge.bot-badge { background: #ddd6fe; color: #5b21b6; }
+.index-title { font-size: 17px; margin-bottom: 12px; font-weight: bold; }
+.index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; max-width: 800px; margin: auto; max-height: 68vh; overflow-y: auto; padding: 4px; }
+.index-btn { background: var(--card-bg); border: 2px solid var(--primary); color: var(--text-color); font-weight: bold; font-size: 14px; padding: 10px 0; border-radius: 10px; cursor: pointer; }
+.index-btn.intro-btn { background: #e2e8f0; border-color: #94a3b8; color: #333; }
+body.dark-mode .index-btn.intro-btn { background: #334155; color: #cbd5e1; border-color: #475569; }
+#slide-container-box { background: var(--card-bg); padding: 18px; border-radius: 15px; border-top: 6px solid #d9534f; box-shadow: 0px 8px 20px rgba(0,0,0,0.1); max-width: 800px; margin: auto; position: relative; }
+.photo-container { display: flex; justify-content: center; gap: 18px; margin-bottom: 12px; }
+.profile-pic { width: clamp(68px, 18vw, 95px); height: clamp(68px, 18vw, 95px); object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); }
+.talking { animation: bounceGlow 0.45s infinite alternate; }
+@keyframes bounceGlow { 0% { transform: scale(1); box-shadow: 0 0 8px var(--primary); } 100% { transform: scale(1.1); box-shadow: 0 0 22px #28a745; } }
+h1.slide-q { color: #d9534f; font-size: clamp(16px, 4vw, 21px); margin: 10px 0; }
+#answer { font-size: clamp(15px, 3.5vw, 18px); line-height: 1.5; color: var(--primary); font-weight: bold; display: none; margin-top: 14px; }
+.btn { padding: 10px 15px; font-size: 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; }
+.btn:disabled { background-color: #94a3b8; }
+#actionBtn { background-color: #f59e0b; width: 100%; margin-top: 14px; padding: 12px; font-size: 17px; }
+.controls { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.nav-btn { background-color: var(--primary); flex: 1; padding: 12px 0; }
+.back-btn { background: #64748b; padding: 8px 14px; }
+.home-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; padding: 5px 12px; border-radius: 5px; }
+
+/* FLOATING ROUND SARTHAK AI ICON */
+#floating-ai-btn {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6, #007bff);
+    border: 2px solid #fff;
+    box-shadow: 0 6px 18px rgba(139, 92, 246, 0.65);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 999;
+}
+#floating-ai-btn img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #fff; }
+#floating-ai-btn span { font-size: 10px; font-weight: bold; color: #fff; background: #e74c3c; padding: 1px 6px; border-radius: 8px; margin-top: -5px; }
+</style>
 </head>
 <body>
-    <div id="view-dashboard" class="view active">
-        <div class="top-bar">
-            <h1><img src="/static/images/sarthak.png" alt="Logo"> SarthakRobo AI</h1>
-            <button class="theme-btn" onclick="toggleTheme()">🌙 Sci-Fi</button>
-        </div>
-        
-        <button id="installAppBtn" class="install-btn">📱 Install SarthakRobo App</button>
 
-        <div class="dashboard-grid">
-            <div class="card evs" onclick="showIndex('evs')">
-                <h2>🌍 EVS Teacher</h2>
-                <p>Voice Interactive EVS Chapters</p>
-                <span class="badge active-badge">4 Parts | 121 Slides</span>
+<!-- FLOATING ROUND AI BUTTON -->
+<div id="floating-ai-btn" onclick="showChatbot()">
+    <img src="/static/images/sarthak2.png" alt="AI">
+    <span>🎤 AI</span>
+</div>
+
+<!-- VIEW 1: DASHBOARD -->
+<div id="view-dashboard" class="view active">
+    <div class="top-bar">
+        <h1><img src="/static/images/sarthak.png" alt="Logo"> SarthakRobo AI</h1>
+        <button class="theme-btn" onclick="toggleTheme()">🌙 Sci-Fi</button>
+    </div>
+    <button id="installAppBtn" class="install-btn">📲 Install SarthakRobo App</button>
+    <div class="dashboard-grid">
+        <div class="card evs" onclick="showIndex('evs')">
+            <h2>🌍 EVS Teacher</h2>
+            <p>Voice Interactive EVS Chapters</p>
+            <span class="badge active-badge">4 Parts | 121 Slides</span>
+        </div>
+        <div class="card hindi" onclick="showIndex('hindi')">
+            <h2>📖 Hindi Teacher</h2>
+            <p>Grammar, Q&amp;A &amp; Vocabulary</p>
+            <span class="badge active-badge">12 Parts | 88 Slides</span>
+        </div>
+        <div class="card chatbot" onclick="showChatbot()">
+            <h2>🤖 SarthakRobo Chat</h2>
+            <p>Talk Live with Sarthak (HI | GU | EN)</p>
+            <span class="badge bot-badge">Ultra-Fast Voice AI</span>
+        </div>
+        <div class="card english" onclick="showIndex('english')">
+            <h2>🔤 English Teacher</h2>
+            <p>Grammar &amp; Speech</p>
+            <span class="badge active-badge">5 Parts | 115 Slides</span>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW 2: SUBJECT INDEX -->
+<div id="view-index" class="view">
+    <div class="top-bar">
+        <h1 id="index-page-title">🌍 EVS Chapters</h1>
+        <button class="btn back-btn" onclick="showDashboard()">⬅ Back</button>
+    </div>
+    <p class="index-title">Select a Section or Question:</p>
+    <div class="index-grid" id="indexGrid"></div>
+</div>
+
+<!-- VIEW 3: SLIDE VIEW -->
+<div id="view-slide" class="view">
+    <div id="slide-container-box">
+        <button class="btn home-btn" onclick="showIndex(currentSubject)">✖ Close</button>
+        <div class="photo-container">
+            <img class="profile-pic" id="pic1" src="/static/images/sarthak.png">
+            <img class="profile-pic" id="pic2" src="/static/images/sarthak2.png">
+        </div>
+        <h1 class="slide-q" id="question">Loading...</h1>
+        <button id="actionBtn" class="btn" onclick="showAnswerAndPlay()">Show Answer &amp; Audio</button>
+        <p id="answer"></p>
+        <div class="controls">
+            <button id="prevBtn" class="btn nav-btn" onclick="changeSlide(-1)">⬅ Prev</button>
+            <label style="font-size:14px; font-weight:bold;">
+                <input type="checkbox" id="autoPlayToggle" checked> Auto
+            </label>
+            <button id="nextBtn" class="btn nav-btn" onclick="changeSlide(1)">Next ➡</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW 4: MOBILE-PERFECT AI VOICE ASSISTANT -->
+<div id="view-chat" class="view">
+    <div class="chat-header">
+        <div class="chat-header-left">
+            <img class="chat-avatar" id="chatPic1" src="/static/images/sarthak.png">
+            <img class="chat-avatar" id="chatPic2" src="/static/images/sarthak2.png">
+            <div class="chat-title-box">
+                <h2>Sarthak Patel (Gotu)</h2>
+                <span>● Online | Instant Voice</span>
             </div>
-            <div class="card hindi" onclick="showIndex('hindi')">
-                <h2>📖 Hindi Teacher</h2>
-                <p>Grammar, Q&A & Vocabulary</p>
-                <span class="badge active-badge">12 Parts | 88 Slides</span>
-            </div>
-            <div class="card chatbot" onclick="alert('Chatbot backend is being configured for Sarthak Patel. Coming in Phase 2!')">
-                <h2>🤖 SarthakRobo Chat</h2>
-                <p>Talk to your AI Assistant</p>
-                <span class="badge bot-badge">Judges Special Feature</span>
-            </div>
-            <div class="card english" onclick="showIndex('english')">
-                <h2>🔠 English Teacher</h2>
-                <p>Grammar & Speech</p>
-                <span class="badge active-badge">5 Parts | 115 Slides</span>
-            </div>
+        </div>
+        <button class="btn back-btn" onclick="closeChatbot()">⬅ Back</button>
+    </div>
+
+    <div class="lang-bar">
+        <button id="lang-hi" class="lang-btn" style="background:#28a745;" onclick="setChatLang('hi-IN')">🇮🇳 हिंदी</button>
+        <button id="lang-gu" class="lang-btn" style="background:#64748b;" onclick="setChatLang('gu-IN')">🇮🇳 ગુજરાતી</button>
+        <button id="lang-en" class="lang-btn" style="background:#64748b;" onclick="setChatLang('en-IN')">🇮🇳 English</button>
+    </div>
+
+    <div id="chat-history">
+        <div style="background:#8b5cf6; color:#fff; padding:10px 14px; border-radius:12px; align-self:flex-start; max-width:86%; font-size:15px;">
+            <b>Sarthak:</b> नमस्ते! मैं सार्थक हूँ। माइक दबाएं और मुझसे सीधा सवाल पूछें!
         </div>
     </div>
 
-    <div id="view-index" class="view">
-        <div class="top-bar">
-            <h1 id="index-page-title">🌍 EVS Chapters</h1>
-            <button class="btn back-btn" onclick="showDashboard()">🏠 Back</button>
-        </div>
-        <p class="index-title" style="color:var(--text-color);">Select a Section or Question:</p>
-        <div class="index-grid" id="indexGrid"></div>
-    </div>
-
-    <div id="view-slide" class="view">
-        <div id="slide-container-box">
-            <button class="btn home-btn" onclick="showIndex(currentSubject)">✖ Close</button>
-            <div class="photo-container">
-                <img class="profile-pic" id="pic1" src="/static/images/sarthak.png">
-                <img class="profile-pic" id="pic2" src="/static/images/sarthak2.png">
-            </div>
-            <h1 class="slide-q" id="question">Loading...</h1>
-            <button id="actionBtn" class="btn" onclick="showAnswerAndPlay()">Show Answer & Audio</button>
-            <p id="answer"></p>
-            <div class="controls">
-                <button id="prevBtn" class="btn nav-btn" onclick="changeSlide(-1)">◀ Prev</button>
-                <label style="font-size:14px; font-weight:bold; color:var(--text-color);">
-                    <input type="checkbox" id="autoPlayToggle" checked> Auto
-                </label>
-                <button id="nextBtn" class="btn nav-btn" onclick="changeSlide(1)">Next ▶</button>
-            </div>
+    <div class="chat-footer">
+        <button id="btn-voice" onclick="startVoice()">🎤 Tap to Speak (बोलें)</button>
+        <div class="chat-input-row">
+            <input id="chat-input" type="text" placeholder="यहाँ लिखकर भी पूछें..." onkeydown="if(event.key==='Enter') sendTypedMessage()">
+            <button class="btn" style="background:var(--primary); padding:10px 18px;" onclick="sendTypedMessage()">Send</button>
         </div>
     </div>
+</div>
 
-    <audio id="audioPlayer" style="display:none;"></audio>
+<audio id="audioPlayer" style="display:none;"></audio>
 
-    <script>
-        let currentSlide = 1;
-        let currentSubject = 'evs'; 
-        let totalSlides = 121; 
-        let wakeLock = null; 
-        
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const btn = document.querySelector('.theme-btn');
-            btn.innerText = document.body.classList.contains('dark-mode') ? "☀️ Light" : "🌙 Sci-Fi";
-        }
+<script>
+let currentSlide = 1;
+let currentSubject = 'evs';
+let totalSlides = 121;
+let wakeLock = null;
+let previousView = 'view-dashboard';
+let chatHistoryList = [];
 
-        async function requestWakeLock() {
-            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); }
-            catch (err) { console.error(err); }
-        }
+function switchView(viewId) {
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    var target = document.getElementById(viewId);
+    if (target) target.classList.add('active');
+    var fab = document.getElementById('floating-ai-btn');
+    if (fab) fab.style.display = (viewId === 'view-chat') ? 'none' : 'flex';
+}
 
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installAppBtn').style.display = 'block'; 
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    var btn = document.querySelector('.theme-btn');
+    btn.innerText = document.body.classList.contains('dark-mode') ? "☀️ Light" : "🌙 Sci-Fi";
+}
+
+async function requestWakeLock() {
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('installAppBtn').style.display = 'block';
+});
+document.getElementById('installAppBtn').addEventListener('click', async function() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        var res = await deferredPrompt.userChoice;
+        if (res.outcome === 'accepted') document.getElementById('installAppBtn').style.display = 'none';
+        deferredPrompt = null;
+    }
+});
+
+function generateIndex() {
+    var grid = document.getElementById("indexGrid");
+    grid.innerHTML = "";
+    var slideCounter = 1;
+    function addHeader(title) {
+        var hdr = document.createElement("div");
+        hdr.style.gridColumn = "1 / -1"; hdr.style.textAlign = "left"; hdr.style.fontWeight = "bold";
+        hdr.style.marginTop = "12px"; hdr.style.color = "var(--primary)";
+        hdr.style.borderBottom = "1px solid var(--border-color)"; hdr.style.paddingBottom = "4px";
+        hdr.innerText = title; grid.appendChild(hdr);
+    }
+    function addBtn(label, sNum, isIntro) {
+        var btn = document.createElement("button");
+        btn.className = isIntro ? "index-btn intro-btn" : "index-btn";
+        btn.innerText = label;
+        btn.onclick = function() { startClass(sNum); };
+        grid.appendChild(btn);
+    }
+    if (currentSubject === 'evs') {
+        addHeader("Part 1: Multiple Choice Questions"); addBtn("Intro", slideCounter++, true);
+        for (var i = 1; i <= 32; i++) addBtn("1." + i, slideCounter++, false);
+        addHeader("Part 2: True or False"); addBtn("Intro", slideCounter++, true);
+        for (var j = 1; j <= 33; j++) addBtn("2." + j, slideCounter++, false);
+        addHeader("Part 3: Fill in the Blanks"); addBtn("Intro", slideCounter++, true);
+        for (var k = 1; k <= 17; k++) addBtn("3." + k, slideCounter++, false);
+        addHeader("Part 4: Question & Answers"); addBtn("Intro", slideCounter++, true);
+        for (var m = 1; m <= 35; m++) addBtn("4." + m, slideCounter++, false);
+    } else if (currentSubject === 'hindi') {
+        var hindiParts = [
+            {title: "शब्दार्थ", count: 11}, {title: "समानार्थी", count: 9}, {title: "सही/गलत", count: 5},
+            {title: "विलोम", count: 8}, {title: "संज्ञा मिलान", count: 6}, {title: "वाक्य पूरे करो", count: 5},
+            {title: "स्थान मिलान", count: 5}, {title: "उचित विकल्प", count: 5}, {title: "काव्य पंक्ति", count: 3},
+            {title: "पत्र लेखन", count: 1}, {title: "उचित शब्द", count: 9}, {title: "प्रश्न उत्तर", count: 9}
+        ];
+        hindiParts.forEach(function(part, idx) {
+            addHeader("Part " + (idx + 1) + ": " + part.title); addBtn("Intro", slideCounter++, true);
+            for (var n = 1; n <= part.count; n++) addBtn((idx + 1) + "." + n, slideCounter++, false);
         });
-
-        document.getElementById('installAppBtn').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') { document.getElementById('installAppBtn').style.display = 'none'; }
-                deferredPrompt = null;
-            }
+    } else if (currentSubject === 'english') {
+        var engParts = [
+            {title: "Word Meanings", count: 20}, {title: "MCQs", count: 25},
+            {title: "True/False", count: 25}, {title: "Fill in Blanks", count: 24},
+            {title: "Question Answers", count: 16}
+        ];
+        engParts.forEach(function(part, idx) {
+            addHeader("Part " + (idx + 1) + ": " + part.title); addBtn("Intro", slideCounter++, true);
+            for (var p = 1; p <= part.count; p++) addBtn((idx + 1) + "." + p, slideCounter++, false);
         });
+    }
+}
 
-        function generateIndex() {
-            const grid = document.getElementById("indexGrid");
-            grid.innerHTML = "";
-            let slideCounter = 1;
+const audioPlayer = document.getElementById("audioPlayer");
+const pic1 = document.getElementById("pic1");
+const pic2 = document.getElementById("pic2");
 
-            function addHeader(title) {
-                let hdr = document.createElement("div");
-                hdr.style.gridColumn = "1 / -1";
-                hdr.style.textAlign = "left";
-                hdr.style.fontWeight = "bold";
-                hdr.style.marginTop = "15px";
-                hdr.style.color = "var(--primary)";
-                hdr.style.borderBottom = "1px solid var(--border-color)";
-                hdr.style.paddingBottom = "5px";
-                hdr.innerText = title;
-                grid.appendChild(hdr);
-            }
+function showDashboard() {
+    audioPlayer.pause();
+    if (chatAudio) { chatAudio.pause(); isChatSpeaking = false; }
+    switchView('view-dashboard');
+}
 
-            function addBtn(label, sNum, isIntro = false) {
-                let btn = document.createElement("button");
-                btn.className = isIntro ? "index-btn intro-btn" : "index-btn";
-                btn.innerText = label;
-                btn.onclick = function() { startClass(sNum); };
-                grid.appendChild(btn);
-            }
+function showIndex(subject) {
+    currentSubject = subject;
+    if (subject === 'evs') totalSlides = 121;
+    else if (subject === 'hindi') totalSlides = 88;
+    else if (subject === 'english') totalSlides = 115;
+    var title = "🌍 EVS Chapters";
+    if (subject === 'hindi') title = "📖 Hindi Teacher";
+    if (subject === 'english') title = "🔤 English Teacher";
+    document.getElementById('index-page-title').innerText = title;
+    audioPlayer.pause(); switchView('view-index'); requestWakeLock(); generateIndex();
+}
 
-            if (currentSubject === 'evs') {
-                addHeader("Part 1: Multiple Choice Questions"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=32; i++) { addBtn(`1.${i}`, slideCounter++); }
-                addHeader("Part 2: True or False"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=33; i++) { addBtn(`2.${i}`, slideCounter++); }
-                addHeader("Part 3: Fill in the Blanks"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=17; i++) { addBtn(`3.${i}`, slideCounter++); }
-                addHeader("Part 4: Question & Answers"); addBtn("Intro", slideCounter++, true); for(let i=1; i<=35; i++) { addBtn(`4.${i}`, slideCounter++); }
-            } else if (currentSubject === 'hindi') {
-                const hindiParts = [ { title: "शब्दार्थ", count: 11 }, { title: "समानार्थी", count: 9 }, { title: "सही/गलत", count: 5 }, { title: "विलोम", count: 8 }, { title: "संज्ञा मिलान", count: 6 }, { title: "वाक्य पूरे करो", count: 5 }, { title: "स्थान मिलान", count: 5 }, { title: "उचित विकल्प", count: 5 }, { title: "काव्य पंक्ति", count: 3 }, { title: "पत्र लेखन", count: 1 }, { title: "उचित शब्द", count: 9 }, { title: "प्रश्न उत्तर", count: 9 } ];
-                hindiParts.forEach((part, index) => { addHeader(`Part ${index + 1}: ${part.title}`); addBtn("Intro", slideCounter++, true); for(let i=1; i<=part.count; i++) { addBtn(`${index + 1}.${i}`, slideCounter++); } });
-            } else if (currentSubject === 'english') {
-                const engParts = [ { title: "Word Meanings", count: 20 }, { title: "MCQs", count: 25 }, { title: "True/False", count: 25 }, { title: "Fill in Blanks", count: 24 }, { title: "Question Answers", count: 16 } ];
-                engParts.forEach((part, index) => { addHeader(`Part ${index + 1}: ${part.title}`); addBtn("Intro", slideCounter++, true); for(let i=1; i<=part.count; i++) { addBtn(`${index + 1}.${i}`, slideCounter++); } });
-            }
+function startClass(slideNum) {
+    switchView('view-slide'); currentSlide = slideNum; loadSlide(currentSlide); requestWakeLock();
+}
+
+function loadSlide(slideNum) {
+    audioPlayer.pause(); audioPlayer.currentTime = 0;
+    pic1.classList.remove("talking"); pic2.classList.remove("talking");
+    document.getElementById("question").innerText = "Loading...";
+    var fetchUrl = "/get_slide/" + slideNum;
+    if (currentSubject === 'hindi') fetchUrl = "/get_hindi_slide/" + slideNum;
+    if (currentSubject === 'english') fetchUrl = "/get_english_slide/" + slideNum;
+    fetch(fetchUrl).then(function(res) { return res.json(); }).then(function(data) {
+        if (data.error) return;
+        document.getElementById("question").innerText = data.question;
+        document.getElementById("answer").innerText = data.answer;
+        audioPlayer.src = data.audio;
+        if (data.is_heading) {
+            document.getElementById("answer").style.display = "none";
+            document.getElementById("actionBtn").style.display = "none";
+            audioPlayer.play();
+        } else {
+            document.getElementById("answer").style.display = "none";
+            document.getElementById("actionBtn").style.display = "block";
         }
+        document.getElementById("prevBtn").disabled = (slideNum === 1);
+        document.getElementById("nextBtn").disabled = (slideNum === totalSlides);
+    });
+}
 
-        function showDashboard() { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-dashboard').classList.add('active'); audioPlayer.pause(); }
-        function showIndex(subject) { 
-            currentSubject = subject; 
-            if(subject === 'evs') totalSlides = 121;
-            else if(subject === 'hindi') totalSlides = 88;
-            else if(subject === 'english') totalSlides = 115;
+function showAnswerAndPlay() {
+    document.getElementById("answer").style.display = "block";
+    document.getElementById("actionBtn").style.display = "none";
+    audioPlayer.play();
+}
 
-            let title = "🌍 EVS Chapters";
-            if(subject === 'hindi') title = "📖 Hindi Teacher";
-            if(subject === 'english') title = "🔠 English Teacher";
-            
-            document.getElementById('index-page-title').innerText = title;
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-index').classList.add('active'); 
-            audioPlayer.pause(); requestWakeLock(); generateIndex(); 
+audioPlayer.onplay = function() { pic1.classList.add("talking"); pic2.classList.add("talking"); };
+audioPlayer.onpause = function() { pic1.classList.remove("talking"); pic2.classList.remove("talking"); };
+audioPlayer.onended = function() {
+    pic1.classList.remove("talking"); pic2.classList.remove("talking");
+    if (document.getElementById("autoPlayToggle").checked && currentSlide < totalSlides) {
+        setTimeout(function() { changeSlide(1); }, 1500);
+    }
+};
+
+function changeSlide(step) {
+    var newSlide = currentSlide + step;
+    if (newSlide >= 1 && newSlide <= totalSlides) { currentSlide = newSlide; loadSlide(currentSlide); }
+}
+
+/* === ULTRA-FAST AI VOICE ASSISTANT === */
+let chatLang = 'hi-IN';
+let chatAudio = new Audio();
+let isChatSpeaking = false;
+let isAskingAI = false;
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+const chatRec = SpeechRec ? new SpeechRec() : null;
+
+if (chatRec) {
+    chatRec.lang = 'hi-IN';
+    chatRec.interimResults = false;
+    chatRec.onstart = function() {
+        var b = document.getElementById('btn-voice');
+        b.innerHTML = "🛑 सुन रहा हूँ... (बोलिए)";
+        b.style.background = "#c0392b";
+    };
+    chatRec.onerror = function() { resetVoiceBtn(); };
+    chatRec.onend = function() { if (!isChatSpeaking && !isAskingAI) resetVoiceBtn(); };
+    chatRec.onresult = function(event) {
+        var transcript = event.results[0][0].transcript;
+        askSarthakAI(transcript);
+    };
+}
+
+function resetVoiceBtn() {
+    var b = document.getElementById('btn-voice');
+    if (!b) return;
+    b.style.background = "#e74c3c";
+    if (chatLang === 'gu-IN') b.innerHTML = "🎤 Tap to Speak (બોલો)";
+    else if (chatLang === 'en-IN') b.innerHTML = "🎤 Tap to Speak";
+    else b.innerHTML = "🎤 Tap to Speak (बोलें)";
+}
+
+function setChatLang(lang) {
+    chatLang = lang;
+    if (chatRec) chatRec.lang = lang;
+    document.getElementById('lang-hi').style.background = (lang === 'hi-IN') ? '#28a745' : '#64748b';
+    document.getElementById('lang-gu').style.background = (lang === 'gu-IN') ? '#28a745' : '#64748b';
+    document.getElementById('lang-en').style.background = (lang === 'en-IN') ? '#28a745' : '#64748b';
+    resetVoiceBtn();
+}
+
+function showChatbot() {
+    var currentActive = document.querySelector('.view.active');
+    if (currentActive && currentActive.id !== 'view-chat') previousView = currentActive.id;
+    audioPlayer.pause();
+    switchView('view-chat');
+    requestWakeLock();
+}
+
+function closeChatbot() {
+    if (chatAudio) { chatAudio.pause(); isChatSpeaking = false; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    document.getElementById('chatPic1').classList.remove('talking');
+    document.getElementById('chatPic2').classList.remove('talking');
+    resetVoiceBtn();
+    switchView(previousView || 'view-dashboard');
+}
+
+function startVoice() {
+    if (isChatSpeaking) {
+        chatAudio.pause();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        isChatSpeaking = false;
+        document.getElementById('chatPic1').classList.remove('talking');
+        document.getElementById('chatPic2').classList.remove('talking');
+        resetVoiceBtn();
+        return;
+    }
+    if (chatRec) {
+        try { chatRec.start(); } catch (e) {}
+    } else {
+        alert("माइक सपोर्टेड नहीं है, कृपया नीचे लिखकर पूछें।");
+    }
+}
+
+function sendTypedMessage() {
+    var inp = document.getElementById('chat-input');
+    var txt = inp.value.trim();
+    if (!txt) return;
+    inp.value = '';
+    askSarthakAI(txt);
+}
+
+function appendChatMsg(sender, text, isUser) {
+    var box = document.getElementById('chat-history');
+    var div = document.createElement('div');
+    div.style.padding = '10px 14px';
+    div.style.borderRadius = '12px';
+    div.style.maxWidth = '86%';
+    div.style.fontSize = '15px';
+    div.style.lineHeight = '1.4';
+    div.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
+    div.style.background = isUser ? '#056162' : '#8b5cf6';
+    div.style.color = '#fff';
+    div.innerHTML = '<b>' + sender + ':</b> ' + text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+async function askSarthakAI(text) {
+    if (isAskingAI) return;
+    isAskingAI = true;
+    appendChatMsg("You", text, true);
+    var b = document.getElementById('btn-voice');
+    b.innerHTML = "⚡...";
+    b.style.background = "#f59e0b";
+    try {
+        var res = await fetch('/ask_text', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: text, lang: chatLang, history: chatHistoryList.slice(-3)})
+        });
+        var data = await res.json();
+        if (data.error) {
+            appendChatMsg("Sarthak", "Error: " + data.error, false);
+            isAskingAI = false; resetVoiceBtn(); return;
         }
-        function startClass(slideNum) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById('view-slide').classList.add('active'); currentSlide = slideNum; loadSlide(currentSlide); requestWakeLock(); }
+        chatHistoryList.push({role: "user", text: text});
+        chatHistoryList.push({role: "ai", text: data.text});
+        appendChatMsg("Sarthak", data.text, false);
 
-        const audioPlayer = document.getElementById("audioPlayer");
-        const pic1 = document.getElementById("pic1"); const pic2 = document.getElementById("pic2");
-
-        function loadSlide(slideNum) {
-            audioPlayer.pause(); audioPlayer.currentTime = 0; pic1.classList.remove("talking"); pic2.classList.remove("talking");
-            document.getElementById("question").innerText = "Loading...";
-            
-            let fetchUrl = `/get_slide/${slideNum}`;
-            if(currentSubject === 'hindi') fetchUrl = `/get_hindi_slide/${slideNum}`;
-            if(currentSubject === 'english') fetchUrl = `/get_english_slide/${slideNum}`;
-
-            fetch(fetchUrl).then(res => res.json()).then(data => {
-                if(data.error) return;
-                document.getElementById("question").innerText = data.question; document.getElementById("answer").innerText = data.answer; audioPlayer.src = data.audio;
-                if(data.is_heading) { document.getElementById("answer").style.display = "none"; document.getElementById("actionBtn").style.display = "none"; audioPlayer.play(); } 
-                else { document.getElementById("answer").style.display = "none"; document.getElementById("actionBtn").style.display = "block"; }
-                document.getElementById("prevBtn").disabled = (slideNum === 1); document.getElementById("nextBtn").disabled = (slideNum === totalSlides);
-            });
+        var ttsRes = await fetch('/tts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: data.text, lang: chatLang})
+        });
+        var ttsData = await ttsRes.json();
+        isAskingAI = false;
+        if (ttsData.audio) {
+            chatAudio = new Audio("data:audio/mp3;base64," + ttsData.audio);
+            chatAudio.playbackRate = 1.08;
+            chatAudio.onplay = function() {
+                isChatSpeaking = true;
+                b.innerHTML = "🔊 Speaking... (रोकने के लिए दबाएं)";
+                b.style.background = "#28a745";
+                document.getElementById('chatPic1').classList.add('talking');
+                document.getElementById('chatPic2').classList.add('talking');
+            };
+            chatAudio.onended = function() {
+                isChatSpeaking = false;
+                document.getElementById('chatPic1').classList.remove('talking');
+                document.getElementById('chatPic2').classList.remove('talking');
+                resetVoiceBtn();
+            };
+            chatAudio.play();
+        } else {
+            resetVoiceBtn();
         }
-
-        function showAnswerAndPlay() { document.getElementById("answer").style.display = "block"; document.getElementById("actionBtn").style.display = "none"; audioPlayer.play(); }
-
-        audioPlayer.onplay = function() { pic1.classList.add("talking"); pic2.classList.add("talking"); };
-        audioPlayer.onpause = function() { pic1.classList.remove("talking"); pic2.classList.remove("talking"); };
-        audioPlayer.onended = function() { pic1.classList.remove("talking"); pic2.classList.remove("talking"); if(document.getElementById("autoPlayToggle").checked && currentSlide < totalSlides) { setTimeout(() => { changeSlide(1); }, 1500); } };
-
-        function changeSlide(step) { let newSlide = currentSlide + step; if(newSlide >= 1 && newSlide <= totalSlides) { currentSlide = newSlide; loadSlide(currentSlide); } }
-        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
-    </script>
+    } catch (err) {
+        isAskingAI = false;
+        appendChatMsg("Sarthak", "Connection Error!", false);
+        resetVoiceBtn();
+    }
+}
+</script>
 </body>
 </html>

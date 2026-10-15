@@ -543,6 +543,10 @@ def get_english_slide(slide_id):
             return jsonify(slide)
     return jsonify({'error': 'Slide not found'})
 
+
+from sarthak_ai import register_ai_routes
+register_ai_routes(app)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
