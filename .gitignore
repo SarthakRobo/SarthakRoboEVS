@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+temp_*.mp3
+visitor_logs.json
+verify_and_prepare.py
+add_pin_lock.py
+school_safety_patch.py
+fix_tracker_and_csv.py
+full_tracker_update.py
+turbo_mobile_update.py
+fast_update.py
+update_all.py
