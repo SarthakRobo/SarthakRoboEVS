@@ -1,4 +1,4 @@
-import os, json, time, asyncio, base64, uuid, re, urllib.request, urllib.parse
+import os, json, time, asyncio, base64, uuid, re, urllib.request, urllib.parse, threading
 from datetime import datetime, timedelta
 from flask import request, jsonify, g
 import edge_tts
@@ -7,6 +7,8 @@ from google.genai import types
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AQ.Ab8RN6LJ64xyPk5qf" + "LbRSMfkQaPnyufDChamuGl1kc7p0gJSgg")
 ai_client = genai.Client(api_key=GEMINI_API_KEY)
+
+FIREBASE_DB_URL = "https://sarthakrobo1-default-rtdb.firebaseio.com/sarthak_logs.json"
 
 SARTHAK_DETAILS = ""
 if os.path.exists("sarthak_details.txt"):
@@ -20,7 +22,29 @@ LOG_FILE = "visitor_logs.json"
 def get_ist_time():
     return (datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d-%b %I:%M:%S %p")
 
+def get_visitor_name():
+    try:
+        raw = request.cookies.get("sarthak_vname", "")
+        if raw:
+            return urllib.parse.unquote(raw).strip()
+    except Exception:
+        pass
+    return "Guest"
+
 def load_logs():
+    try:
+        req = urllib.request.Request(FIREBASE_DB_URL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=2.5) as r:
+            data = json.loads(r.read().decode("utf-8"))
+            if isinstance(data, dict):
+                items = [v for v in data.values() if isinstance(v, dict)]
+                items.sort(key=lambda x: x.get("ts", 0), reverse=True)
+                return items
+            elif isinstance(data, list):
+                return [v for v in data if isinstance(v, dict)]
+    except Exception:
+        pass
+
     if os.path.exists(LOG_FILE):
         try:
             with open(LOG_FILE, "r", encoding="utf-8") as f:
@@ -29,22 +53,47 @@ def load_logs():
             return []
     return []
 
-def save_log(action, details):
+def _push_to_firebase_async(entry):
+    try:
+        payload = json.dumps(entry, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(
+            FIREBASE_DB_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        urllib.request.urlopen(req, timeout=3).read()
+    except Exception:
+        pass
+
+def save_log(action, details, custom_name=None):
     try:
         vid = getattr(g, "visitor_id", None) or request.cookies.get("sarthak_vid", "new_user")
+        vname = custom_name or get_visitor_name()
         ua = request.headers.get("User-Agent", "Unknown Device")
-        logs = load_logs()
-        logs.insert(0, {
+        entry = {
+            "ts": time.time(),
             "time": get_ist_time(),
-            "visitor_id": vid[:14],
+            "visitor_name": vname,
+            "visitor_id": vid[:12],
             "action": action,
             "details": details,
-            "device": ua[:65]
-        })
+            "device": ua[:60]
+        }
+        logs = []
+        if os.path.exists(LOG_FILE):
+            try:
+                with open(LOG_FILE, "r", encoding="utf-8") as f:
+                    logs = json.load(f)
+            except Exception:
+                logs = []
+        logs.insert(0, entry)
         if len(logs) > 1000:
             logs = logs[:1000]
         with open(LOG_FILE, "w", encoding="utf-8") as f:
             json.dump(logs, f, ensure_ascii=False, indent=2)
+
+        threading.Thread(target=_push_to_firebase_async, args=(entry,), daemon=True).start()
     except Exception:
         pass
 
@@ -125,8 +174,16 @@ FAST_QA = [
     })
 ]
 
-def check_fast_qa(user_text, lang_code):
+def check_fast_qa(user_text, lang_code, vname):
     low = user_text.lower().strip()
+    if low in ["hello", "hi", "namaste", "हेलो", "हाय", "नमस्ते", "હેલો", "નમસ્તે", "કેમ છો", "केम छो"]:
+        if vname and vname.lower() != "guest":
+            if lang_code == "gu-IN" or any(ch in user_text for ch in "તમણછશળ"):
+                return f"નમસ્તે {vname}! હું સાર્થક પટેલ છું. તમે મારા પ્રોજેક્ટ વિશે શું જાણવા માંગો છો?"
+            elif lang_code == "en-IN":
+                return f"Hello {vname}! I am Sarthak Patel. What would you like to ask me today?"
+            return f"नमस्ते {vname}! मैं सार्थक पटेल हूँ, आप मुझसे क्या पूछना चाहते हैं?"
+
     for keys, ans_map in FAST_QA:
         for k in keys:
             if k in low:
@@ -193,21 +250,27 @@ def get_ai_reply(user_text, lang_code, history):
         if bw in low_check or bw in user_text.lower().split():
             return SAFETY_REPLIES.get(lang_code, SAFETY_REPLIES["hi-IN"])
 
+    vname = get_visitor_name()
     user_text = user_text.replace("बिना मैडम", "बिनल मैम").replace("सांथ सर", "साथ सर")
-    cache_k = f"{lang_code}:{user_text.lower()}"
-    if not history and cache_k in REPLY_CACHE:
-        return REPLY_CACHE[cache_k]
 
-    fast_ans = check_fast_qa(user_text, lang_code)
+    fast_ans = check_fast_qa(user_text, lang_code, vname)
     if fast_ans and len(user_text.split()) <= 7:
         return fast_ans
+
+    cache_k = f"{lang_code}:{vname}:{user_text.lower()}"
+    if not history and cache_k in REPLY_CACHE:
+        return REPLY_CACHE[cache_k]
 
     hist = ""
     if history:
         hist = "पिछली बात:\n" + "\n".join([f"{'Q' if h.get('role')=='user' else 'A'}: {h.get('text','')}" for h in history[-3:]]) + "\n"
 
+    visitor_line = ""
+    if vname and vname.lower() != "guest":
+        visitor_line = f"बात करने वाले विज़िटर का नाम '{vname}' है। जवाब देते समय प्यार या सम्मान से '{vname}' का नाम लो।\n"
+
     prompt = (
-        "तुम 10 साल के छात्र 'सार्थक पटेल' (गोटू) हो।\n"
+        "तुम 10 साल के छात्र 'सार्थक पटेल' (गोटू) हो।\n" + visitor_line +
         "नियम:\n"
         "1. सीधे मुद्दे का जवाब दो। शुरुआत में 'जी', 'हाँ जी', 'नहीं जी', 'अरे', 'यार' कभी मत लगाओ।\n"
         "2. केवल तभी जब कोई खुद 'निमोनिया' या 'पिटाई' पूछकर सवाल करे, तभी मना करना (बिना पूछे कभी निमोनिया या पिटाई का नाम मत लेना)।\n"
@@ -247,7 +310,7 @@ def register_ai_routes(app):
     @app.before_request
     def auto_track_visitor():
         p = request.path
-        if p.startswith('/static') or p in ['/favicon.ico', '/tts', '/admin', '/admin/clear']:
+        if p.startswith('/static') or p in ['/favicon.ico', '/tts', '/admin', '/admin/clear', '/set_visitor_name']:
             return
         vid = request.cookies.get("sarthak_vid")
         if not vid:
@@ -265,9 +328,21 @@ def register_ai_routes(app):
 
     @app.after_request
     def set_vid_cookie(response):
+        if request.path == '/admin' and request.args.get('pin') == '2016':
+            response.set_cookie("sarthak_admin", "2016", max_age=60*60*24*30)
         if hasattr(g, 'visitor_id') and not request.cookies.get("sarthak_vid"):
             response.set_cookie("sarthak_vid", g.visitor_id, max_age=60*60*24*365)
         return response
+
+    @app.route('/set_visitor_name', methods=['POST'])
+    def set_visitor_name_route():
+        try:
+            d = request.get_json(force=True)
+            vname = (d.get("name") or "Guest").strip()
+            save_log("Name Entered", f"Visitor registered as: {vname}", custom_name=vname)
+            return jsonify({"status": "ok", "name": vname})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     @app.route('/admin')
     def admin_panel():
@@ -280,23 +355,30 @@ def register_ai_routes(app):
             button{width:100%;padding:12px;background:#38bdf8;color:#000;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}</style></head>
             <body><div class="box"><h3>🔒 SarthakRobo Admin</h3><p style="font-size:13px;color:#94a3b8">रिकॉर्ड देखने के लिए सीक्रेट पिन डालें</p>
             <form method="GET" action="/admin"><input type="password" name="pin" placeholder="Enter PIN" required autofocus><button type="submit">Unlock</button></form></div></body></html>'''
+
         logs = load_logs()
         total_visits = len(logs)
         unique_visitors = len(set(l.get("visitor_id") for l in logs))
         rows = ""
         for l in logs:
-            rows += f"<tr><td>{l.get('time')}</td><td><code>{l.get('visitor_id')}</code></td><td><span class='badge'>{l.get('action')}</span></td><td><b>{l.get('details')}</b></td><td style='color:#94a3b8;font-size:12px;'>{l.get('device')}</td></tr>"
+            vname = l.get("visitor_name", "Guest")
+            rows += f"<tr><td>{l.get('time')}</td><td><b style='color:#4ade80'>{vname}</b><br><code style='font-size:11px;color:#94a3b8'>{l.get('visitor_id')}</code></td><td><span class='badge'>{l.get('action')}</span></td><td><b>{l.get('details')}</b></td><td style='color:#94a3b8;font-size:12px;'>{l.get('device')}</td></tr>"
         return f"""<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>SarthakRobo Admin Tracker</title>
-        <style>body{{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#f8fafc;padding:15px;margin:0}}h1{{color:#38bdf8;font-size:20px}}.stats{{display:flex;gap:12px;margin-bottom:15px}}.stat-box{{background:#1e293b;padding:10px 16px;border-radius:10px;border-left:4px solid #38bdf8}}.stat-box span{{font-size:18px;font-weight:bold;color:#4ade80}}table{{width:100%;border-collapse:collapse;background:#1e293b;border-radius:10px;overflow:hidden}}th,td{{padding:10px;text-align:left;border-bottom:1px solid #334155;font-size:13px}}th{{background:#334155;color:#38bdf8}}.badge{{background:#8b5cf6;color:#fff;padding:3px 7px;border-radius:6px;font-size:11px}}.btn{{background:#ef4444;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;margin-bottom:12px}}</style></head>
-        <body><h1>📊 SarthakRobo Live Visitor Tracker</h1>
-        <div class='stats'><div class='stat-box'>Total Actions: <span>{total_visits}</span></div><div class='stat-box'>Unique Visitors: <span>{unique_visitors}</span></div></div>
+        <style>body{{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#f8fafc;padding:15px;margin:0}}h1{{color:#38bdf8;font-size:20px}}.stats{{display:flex;gap:12px;margin-bottom:15px;flex-wrap:wrap}}.stat-box{{background:#1e293b;padding:10px 16px;border-radius:10px;border-left:4px solid #38bdf8}}.stat-box span{{font-size:18px;font-weight:bold;color:#4ade80}}table{{width:100%;border-collapse:collapse;background:#1e293b;border-radius:10px;overflow:hidden}}th,td{{padding:10px;text-align:left;border-bottom:1px solid #334155;font-size:13px}}th{{background:#334155;color:#38bdf8}}.badge{{background:#8b5cf6;color:#fff;padding:3px 7px;border-radius:6px;font-size:11px}}.btn{{background:#ef4444;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;margin-bottom:12px}}</style></head>
+        <body><h1>📊 SarthakRobo Firebase Visitor Tracker</h1>
+        <div class='stats'><div class='stat-box'>Total Actions: <span>{total_visits}</span></div><div class='stat-box'>Unique Visitors: <span>{unique_visitors}</span></div><div class='stat-box'>Storage: <span>Firebase + Local</span></div></div>
         <button class='btn' onclick="if(confirm('Clear all logs?')) fetch('/admin/clear',{{method:'POST'}}).then(()=>location.reload())">🗑 Clear Logs</button>
-        <div style='overflow-x:auto'><table><tr><th>Time (IST)</th><th>Visitor ID</th><th>Type</th><th>Details (Slide / Question)</th><th>Device</th></tr>{rows}</table></div></body></html>"""
+        <div style='overflow-x:auto'><table><tr><th>Time (IST)</th><th>Visitor Name / ID</th><th>Type</th><th>Details (Slide / Question)</th><th>Device</th></tr>{rows}</table></div></body></html>"""
 
     @app.route('/admin/clear', methods=['POST'])
     def clear_logs():
         if os.path.exists(LOG_FILE):
             os.remove(LOG_FILE)
+        try:
+            req = urllib.request.Request(FIREBASE_DB_URL, method="DELETE")
+            urllib.request.urlopen(req, timeout=3).read()
+        except Exception:
+            pass
         return jsonify({"status": "cleared"})
 
     @app.route('/ask_text', methods=['POST'])

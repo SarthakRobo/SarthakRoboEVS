@@ -2,11 +2,7 @@ __pycache__/
 *.pyc
 temp_*.mp3
 visitor_logs.json
+final_verify_and_push.py
+safe_firebase_update.py
+update_name_switcher.py
 verify_and_prepare.py
-add_pin_lock.py
-school_safety_patch.py
-fix_tracker_and_csv.py
-full_tracker_update.py
-turbo_mobile_update.py
-fast_update.py
-update_all.py

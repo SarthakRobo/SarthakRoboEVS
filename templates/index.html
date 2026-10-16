@@ -600,5 +600,72 @@ async function askSarthakAI(text) {
     }
 }
 </script>
+
+<!-- SARTHAK_WELCOME_NAME_START -->
+<style>
+#sarthakNameOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); z-index:99999; display:none; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
+.sarthakNameBox { background:#ffffff; color:#0f172a; width:88%; max-width:340px; padding:22px; border-radius:16px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.4); border:3px solid #38bdf8; font-family:sans-serif; }
+.sarthakNameBox h3 { margin:0 0 6px; color:#0284c7; font-size:19px; }
+.sarthakNameBox p { margin:0 0 14px; font-size:13px; color:#475569; }
+.sarthakNameBox input { width:100%; padding:11px; border:2px solid #cbd5e1; border-radius:10px; font-size:15px; text-align:center; box-sizing:border-box; outline:none; margin-bottom:12px; }
+.sarthakNameBox input:focus { border-color:#0284c7; }
+.sarthakNameBtns { display:flex; gap:8px; }
+.sarthakBtnSave { flex:2; background:#0284c7; color:#fff; border:none; padding:11px; border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer; }
+.sarthakBtnSkip { flex:1; background:#e2e8f0; color:#475569; border:none; padding:11px; border-radius:10px; font-size:13px; font-weight:bold; cursor:pointer; }
+#changeNameBadge { position:fixed; bottom:75px; right:14px; background:#0284c7; color:#fff; padding:7px 13px; border-radius:20px; font-size:12px; font-weight:bold; z-index:9998; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:2px solid #fff; font-family:sans-serif; display:flex; align-items:center; gap:5px; }
+</style>
+<div id="sarthakNameOverlay">
+  <div class="sarthakNameBox">
+    <h3>🤖 SarthakRobo</h3>
+    <p id="sarthakBoxTitle">नमस्ते! प्रदर्शनी में आपका स्वागत है। कृपया अपना नाम लिखें:</p>
+    <input type="text" id="sarthakVisitorInput" placeholder="अपना नाम यहाँ लिखें (Enter Name)" maxlength="35" />
+    <div class="sarthakNameBtns">
+      <button class="sarthakBtnSkip" onclick="closeSarthakNameBox(true)">Skip</button>
+      <button class="sarthakBtnSave" onclick="closeSarthakNameBox(false)">सेव करें ➔</button>
+    </div>
+  </div>
+</div>
+<div id="changeNameBadge" onclick="openSarthakNameBox()" title="Click to change name">👤 <span id="currentNameSpan">Guest</span> ✎</div>
+<script>
+(function(){
+  function getCookie(name) {
+    let m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return m ? decodeURIComponent(m[2]) : "";
+  }
+  window.openSarthakNameBox = function() {
+    let cur = getCookie("sarthak_vname");
+    let inp = document.getElementById("sarthakVisitorInput");
+    if (inp) inp.value = (cur && cur !== "Guest") ? cur : "";
+    let ttl = document.getElementById("sarthakBoxTitle");
+    if (ttl) ttl.innerText = "नया नाम लिखें ताकि सार्थक आपका नाम लेकर बात करे:";
+    document.getElementById("sarthakNameOverlay").style.display = "flex";
+    if (inp) setTimeout(function(){ inp.focus(); }, 100);
+  };
+  window.closeSarthakNameBox = function(skipped) {
+    let inp = document.getElementById("sarthakVisitorInput");
+    let vname = (!skipped && inp && inp.value.trim()) ? inp.value.trim() : "Guest";
+    document.cookie = "sarthak_vname=" + encodeURIComponent(vname) + "; path=/; max-age=31536000";
+    document.getElementById("sarthakNameOverlay").style.display = "none";
+    let badge = document.getElementById("currentNameSpan");
+    if (badge) badge.innerText = vname;
+    fetch("/set_visitor_name", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name: vname})
+    }).catch(function(){});
+  };
+  window.addEventListener("DOMContentLoaded", function(){
+    let c = getCookie("sarthak_vname");
+    let badge = document.getElementById("currentNameSpan");
+    if (c) {
+      if (badge) badge.innerText = c;
+    } else {
+      let ov = document.getElementById("sarthakNameOverlay");
+      if (ov) ov.style.display = "flex";
+    }
+  });
+})();
+</script>
+<!-- SARTHAK_WELCOME_NAME_END -->
 </body>
 </html>
