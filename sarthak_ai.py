@@ -15,15 +15,14 @@ if os.path.exists("sarthak_details.txt"):
     with open("sarthak_details.txt", "r", encoding="utf-8") as f:
         SARTHAK_DETAILS = f.read()
 
-EXTRA_FACTS = """
-महत्वपूर्ण ताज़ा जानकारी:
-- 12 जून 2025 को अहमदाबाद में एयर इंडिया की फ्लाइट 171 (Air India Flight 171) का एक दुखद विमान हादसा हुआ था।
-- मैं अपनी बात हमेशा 'मैं' कहकर करता हूँ, कभी खुद को तीसरे व्यक्ति ('सार्थक ऐसा करेगा') की तरह नहीं बोलता।
-"""
-
 AUDIO_CACHE = {}
 REPLY_CACHE = {}
 LOG_FILE = "visitor_logs.json"
+MEM_LOGS = None
+LAST_SLIDE_LOG = {}
+
+FEMALE_TEACHERS = ["priyanka", "jayshree", "maheshwari", "sakshi", "binal", "beena", "bina", "प्रियंका", "जयश्री", "महेश्वरी", "माहेश्वरी", "साक्षी", "बिनल", "પ્રિયંકા", "જયશ્રી", "મહેશ્વરી", "સાક્ષી", "બિનલ"]
+MALE_TEACHERS = ["sath", "saath", "vraj", "mayank", "mahesh", "साथ", "सांथ", "व्रज", "ब्रज", "मयंक", "महेश", "સાથ", "વ્રજ", "મયંક", "મહેશ"]
 
 def get_ist_time():
     return (datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d-%b %I:%M:%S %p")
@@ -54,7 +53,18 @@ def get_visitor_info():
         vrel = "Dadaji"
     elif low_n in ["kokila", "kokilaben", "कोकिलाबेन", "કોકિલાબેન"]:
         vrel = "Dadiji"
+    elif any(t in low_n for t in FEMALE_TEACHERS + MALE_TEACHERS):
+        if vrel in ["Guest", "Friend"]:
+            vrel = "Teacher"
     return vname, vrel
+
+def get_teacher_title(vname, lang_code="hi-IN"):
+    low_n = (vname or "").lower()
+    if any(f in low_n for f in FEMALE_TEACHERS):
+        return "મેડમ" if lang_code == "gu-IN" else ("Ma'am" if lang_code == "en-IN" else "मैम")
+    if any(m in low_n for m in MALE_TEACHERS):
+        return "સર" if lang_code == "gu-IN" else ("Sir" if lang_code == "en-IN" else "सर")
+    return "સર/મેડમ" if lang_code == "gu-IN" else ("Sir/Ma'am" if lang_code == "en-IN" else "सर/मैम")
 
 def get_address_term(vname, vrel, lang_code="hi-IN"):
     if vrel == "Papa":
@@ -62,7 +72,7 @@ def get_address_term(vname, vrel, lang_code="hi-IN"):
     if vrel == "Mummy":
         return "મમ્મી" if lang_code == "gu-IN" else ("Mummy" if lang_code == "en-IN" else "मम्मी")
     if vrel == "Chacha":
-        return "અમિત કાકા" if lang_code == "gu-IN" else ("Chacha ji" if lang_code == "en-IN" else "चाचाजी")
+        return "કાકા" if lang_code == "gu-IN" else ("Chacha ji" if lang_code == "en-IN" else "चाचाजी")
     if vrel == "Chachi":
         return "કાકી" if lang_code == "gu-IN" else ("Chachi ji" if lang_code == "en-IN" else "चाचीजी")
     if vrel == "Dadaji":
@@ -70,15 +80,16 @@ def get_address_term(vname, vrel, lang_code="hi-IN"):
     if vrel == "Dadiji":
         return "દાદીજી" if lang_code == "gu-IN" else ("Dadiji" if lang_code == "en-IN" else "दादीजी")
     if vrel == "Teacher":
-        return "સર/મેડમ" if lang_code == "gu-IN" else ("Sir/Madam" if lang_code == "en-IN" else "सर/मैम")
+        return get_teacher_title(vname, lang_code)
     if vname and vname.lower() != "guest":
         return vname
     return ""
 
 def load_logs():
+    global MEM_LOGS
     try:
         req = urllib.request.Request(FIREBASE_DB_URL, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=0.8) as r:
+        with urllib.request.urlopen(req, timeout=0.7) as r:
             data = json.loads(r.read().decode("utf-8"))
             if isinstance(data, dict):
                 items = [v for v in data.values() if isinstance(v, dict)]
@@ -89,15 +100,36 @@ def load_logs():
     except Exception:
         pass
 
+    if MEM_LOGS is not None:
+        return MEM_LOGS
     if os.path.exists(LOG_FILE):
         try:
             with open(LOG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                MEM_LOGS = json.load(f)
+                return MEM_LOGS
         except Exception:
             return []
     return []
 
-def _push_to_firebase_async(entry):
+def _bg_save_worker(entry):
+    global MEM_LOGS
+    try:
+        if MEM_LOGS is None:
+            MEM_LOGS = []
+            if os.path.exists(LOG_FILE):
+                try:
+                    with open(LOG_FILE, "r", encoding="utf-8") as f:
+                        MEM_LOGS = json.load(f)
+                except Exception:
+                    MEM_LOGS = []
+        MEM_LOGS.insert(0, entry)
+        if len(MEM_LOGS) > 800:
+            MEM_LOGS = MEM_LOGS[:800]
+        with open(LOG_FILE, "w", encoding="utf-8") as f:
+            json.dump(MEM_LOGS, f, ensure_ascii=False)
+    except Exception:
+        pass
+
     try:
         payload = json.dumps(entry, ensure_ascii=False).encode("utf-8")
         req = urllib.request.Request(
@@ -106,13 +138,21 @@ def _push_to_firebase_async(entry):
             headers={"Content-Type": "application/json"},
             method="POST"
         )
-        urllib.request.urlopen(req, timeout=0.5).read()
+        urllib.request.urlopen(req, timeout=0.6).read()
     except Exception:
         pass
 
 def save_log(action, details, custom_name=None, custom_rel=None):
     try:
         vid = getattr(g, "visitor_id", None) or request.cookies.get("sarthak_vid", "new_user")
+        now_ts = time.time()
+        # Prevent duplicate rapid slide spam within 0.8s so server stays lightning fast
+        if "Slide" in action:
+            last_t = LAST_SLIDE_LOG.get(vid, 0)
+            if now_ts - last_t < 0.8:
+                return
+            LAST_SLIDE_LOG[vid] = now_ts
+
         vname, vrel = get_visitor_info()
         if custom_name:
             vname = custom_name
@@ -121,7 +161,7 @@ def save_log(action, details, custom_name=None, custom_rel=None):
         display_visitor = f"{vname} ({vrel})" if vrel and vrel != "Guest" else vname
         ua = request.headers.get("User-Agent", "Unknown Device")
         entry = {
-            "ts": time.time(),
+            "ts": now_ts,
             "time": get_ist_time(),
             "visitor_name": display_visitor,
             "visitor_id": vid[:12],
@@ -129,26 +169,13 @@ def save_log(action, details, custom_name=None, custom_rel=None):
             "details": details,
             "device": ua[:60]
         }
-        logs = []
-        if os.path.exists(LOG_FILE):
-            try:
-                with open(LOG_FILE, "r", encoding="utf-8") as f:
-                    logs = json.load(f)
-            except Exception:
-                logs = []
-        logs.insert(0, entry)
-        if len(logs) > 1000:
-            logs = logs[:1000]
-        with open(LOG_FILE, "w", encoding="utf-8") as f:
-            json.dump(logs, f, ensure_ascii=False, indent=2)
-
-        threading.Thread(target=_push_to_firebase_async, args=(entry,), daemon=True).start()
+        threading.Thread(target=_bg_save_worker, args=(entry,), daemon=True).start()
     except Exception:
         pass
 
 LANG_RULES = {
     "hi-IN": "जवाब केवल शुद्ध और स्वाभाविक हिंदी (देवनागरी) में दो।",
-    "gu-IN": "જવાબ ફક્ત શુદ્ધ અને કુદરતી ગુજરાતી લિપિમાં જ આપો.",
+    "gu-IN": "જવાબ ફક્ત શુદ્ધ અને કુદરતી ગુજરાતી લિપિમાં જ આપો. હિન્દી અક્ષરો ('મम्मी') બિલકુલ મિક્સ ન કરો, શુદ્ધ 'મમ્મી' કે 'પપ્પા' જ લખો.",
     "en-IN": "Reply strictly in natural, lively Indian English."
 }
 
@@ -176,12 +203,31 @@ FAST_QA = [
         "gu-IN": "આ રોબોટ પ્રોજેક્ટ મેં મારા પપ્પા જિગર પટેલના માર્ગદર્શનથી બનાવ્યો છે.",
         "en-IN": "I built this robot project under the guidance of my father Jigar Patel."
     }),
-    (["स्कूल का नाम", "कया स्कूल", "school name", "સ્કૂલનું નામ", "શાળાનું નામ"], {
+    (["स्कूल का नाम", "कया स्कूल", "school name", "સ્કૂલનું નામ", "શાળાનું નામ", "तेरे स्कूल कहां है"], {
         "hi-IN": "मैं एसवीएम इंटरनेशनल स्कूल, रसम में कक्षा 4 में पढ़ता हूँ।",
         "gu-IN": "હું એસવીએમ ઇન્ટરનેશનલ સ્કૂલ, રસમમાં ધોરણ 4 માં ભણું છું.",
         "en-IN": "I study in Class 4th at SVM International School, Rasam."
     })
 ]
+
+def fix_speech_to_text_typos(text):
+    rep = {
+        "बिना मैडम": "बिनल मैम",
+        "बीना मैडम": "बिनल मैम",
+        "सांथ सर": "साथ सर",
+        "व्रत कर": "व्रज सर",
+        "ब्रज सर": "व्रज सर",
+        "जंग फुल": "जंक फूड",
+        "टू लिसन": "ट्यूशन",
+        "फटाफट न्यायालय": "फटाफट नहा ले",
+        "बकरी साथ": "भाखरी शाक",
+        "दोष खाना": "डोसा खाना",
+        "दोष पसंद": "डोसा पसंद",
+        "आयुर्वेदिक कौन है": "त्रिवेदी कौन है"
+    }
+    for k, v in rep.items():
+        text = text.replace(k, v)
+    return text
 
 def check_fast_qa(user_text, lang_code, vname, vrel):
     low = user_text.lower().strip()
@@ -192,7 +238,10 @@ def check_fast_qa(user_text, lang_code, vname, vrel):
                 return f"નમસ્તે {addr}! બોલો, અત્યારે હું શું કરું?"
             return f"नमस्ते {addr}! बोलिए, आज मुझे क्या करना है?"
         if vrel == "Teacher":
-            return "नमस्ते सर/मैम! मेरे प्रोजेक्ट में आपका स्वागत है, आप मुझसे कोई भी सवाल पूछ सकते हैं।"
+            t_title = get_teacher_title(vname, lang_code)
+            if lang_code == "gu-IN":
+                return f"નમસ્તે {t_title}! મારા પ્રોજેક્ટમાં આપનું સ્વાગત છે, આપ મને કોઈ પણ પ્રશ્ન પૂછી શકો છો."
+            return f"नमस्ते {t_title}! मेरे प्रोजेक्ट में आपका स्वागत है, आप मुझसे कोई भी सवाल पूछ सकते हैं।"
         if addr:
             if lang_code == "gu-IN":
                 return f"નમસ્તે {addr}! હું સાર્થક છું, બોલો આજે શું પૂછવું છે?"
@@ -206,22 +255,36 @@ def check_fast_qa(user_text, lang_code, vname, vrel):
                 return ans_map.get(lang_code, ans_map["hi-IN"])
     return None
 
-def clean_ai_text(text, vname, vrel):
-    text = re.sub(r"[*#_`~]", "", text or "").strip()
+def clean_ai_text(text, vname, vrel, lang_code="hi-IN"):
+    text = re.sub(r"[*#_`~$]", "", text or "").strip()
     text = re.sub(r"[\u0600-\u06FF]+", "", text)
     text = re.sub(r"\s*\([^)]{1,35}\)", "", text)
     text = text.replace("बिना मैडम", "बिनल मैम").replace("बीना मैडम", "बिनल मैम")
     text = text.replace("सांथ सर", "साथ सर").replace("सांथ", "साथ").replace("સાંથ સર", "સાથ સર")
-    # Fix disrespectful family name combinations if AI ever slips
+    text = text.replace("મम्मी", "મમ્મી").replace("પप्पा", "પપ્પા").replace("કजिन्सयाना", "कजिन बहनें याना")
+    text = re.sub(r"^मै,\s*", "मैम, ", text)
     text = re.sub(r"(?i)पापा\s*jigar|पापा\s*जिगर|jigar\s*पापा", "पापा", text)
     text = re.sub(r"(?i)मम्मी\s*bhavna|मम्मी\s*भावनाबेन|मम्मी\s*भावना|bhavna\s*मम्मी", "मम्मी", text)
+
     if vrel == "Papa" and vname:
         text = re.sub(r"(?i)\b" + re.escape(vname) + r"\b", "पापा", text)
     elif vrel == "Mummy" and vname:
         text = re.sub(r"(?i)\b" + re.escape(vname) + r"\b", "मम्मी", text)
     elif vrel == "Chacha" and vname:
-        text = re.sub(r"(?i)\b" + re.escape(vname) + r"\b", "अमित चाचा", text)
-        text = text.replace("अमित चाचा चाचा", "अमित चाचा")
+        text = re.sub(r"(?i)\b" + re.escape(vname) + r"\b", "चाचाजी", text)
+    elif vrel == "Teacher":
+        low_n = (vname or "").lower()
+        if any(f in low_n for f in FEMALE_TEACHERS):
+            text = re.sub(r"^सर,\s*", "मैम, ", text)
+            text = re.sub(r"^સર,\s*", "મેડમ, ", text)
+
+    # Ensure sentence never ends abruptly mid-word if token limit hit
+    if text and text[-1] not in [".", "।", "!", "?"]:
+        last_p = max(text.rfind("।"), text.rfind("!"), text.rfind("?"), text.rfind("."))
+        if last_p > len(text) * 0.45:
+            text = text[:last_p+1].strip()
+        else:
+            text = text + ("." if lang_code in ["gu-IN", "en-IN"] else "।")
     return text.strip()
 
 def detect_best_voice(text, requested_lang):
@@ -238,15 +301,17 @@ def generate_voice_b64(text, lang_code):
     if key in AUDIO_CACHE:
         return AUDIO_CACHE[key]
     voice, tl = detect_best_voice(text, lang_code)
-    if len(text) <= 185:
+    # Fast TTS up to 220 chars for 3x faster voice generation
+    if len(text) <= 220:
         try:
             url = "https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=" + tl + "&q=" + urllib.parse.quote(text)
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=3) as r:
+            with urllib.request.urlopen(req, timeout=2.5) as r:
                 data = r.read()
                 if data:
                     b64 = base64.b64encode(data).decode("utf-8")
-                    AUDIO_CACHE[key] = b64
+                    if len(AUDIO_CACHE) < 300:
+                        AUDIO_CACHE[key] = b64
                     return b64
         except Exception:
             pass
@@ -257,7 +322,7 @@ def generate_voice_b64(text, lang_code):
         with open(tmp, "rb") as f:
             data = f.read()
         b64 = base64.b64encode(data).decode("utf-8")
-        if len(AUDIO_CACHE) < 150:
+        if len(AUDIO_CACHE) < 300:
             AUDIO_CACHE[key] = b64
         return b64
     finally:
@@ -271,48 +336,57 @@ def get_ai_reply(user_text, lang_code, history):
             return SAFETY_REPLIES.get(lang_code, SAFETY_REPLIES["hi-IN"])
 
     vname, vrel = get_visitor_info()
-    user_text = user_text.replace("बिना मैडम", "बिनल मैम").replace("सांथ सर", "साथ सर")
+    user_text = fix_speech_to_text_typos(user_text)
 
     fast_ans = check_fast_qa(user_text, lang_code, vname, vrel)
     if fast_ans and len(user_text.split()) <= 6:
         return fast_ans
 
-    # Check if visitor wants a detailed / 5-line answer
-    wants_long = any(w in user_text.lower() for w in ["5 लाइन", "पाँच लाइन", "पांच लाइन", "5 line", "five line", "विस्तार", "डिटेल", "पूरा बताओ", "भाषण", "निबंध"])
-    max_tok = 220 if wants_long else 75
-    len_rule = "सामने वाले ने विस्तार से या 5 लाइन मांगी हैं, इसलिए बिना मना किए पूरे 5 वाक्यों में शानदार जानकारी दो।" if wants_long else "जवाब 1 से 2 छोटे और स्वाभाविक वाक्यों में दो।"
+    cache_k = f"{lang_code}:{vname}:{vrel}:{user_text.lower()}"
+    if not history and cache_k in REPLY_CACHE:
+        return REPLY_CACHE[cache_k]
+
+    wants_long = any(w in user_text.lower() for w in ["5 लाइन", "पाँच लाइन", "पांच लाइन", "10 लाइन", "5 line", "five line", "विस्तार", "डिटेल", "पूरा बताओ", "भाषण", "निबंध"])
+    max_tok = 260 if wants_long else 135
+    len_rule = "सामने वाले ने विस्तार से या 5 लाइन मांगी हैं, इसलिए बिना मना किए पूरे 5 छोटे वाक्यों में जानकारी दो।" if wants_long else "जवाब 1 से 2 छोटे, पूर्ण और स्वाभाविक वाक्यों में दो (वाक्य कभी अधूरा मत छोड़ना)।"
+
+    # Only include Flight 171 or Notebandi context when user actually asks about it
+    extra_context = ""
+    low_u = user_text.lower()
+    if any(k in low_u for k in ["171", "क्रैश", "crash", "प्लेन", "plane", "विमान", "एरोप्लेन", "12 जून", "13 जून"]):
+        extra_context += "\nताज़ा जानकारी: 12 जून 2025 को अहमदाबाद में एयर इंडिया की फ्लाइट 171 (Air India Flight 171) का विमान हादसा हुआ था।"
+    if any(k in low_u for k in ["नोटबंदी", "notebandi", "demonetization", "8 नवंबर", "न्यूज़", "खबर"]):
+        extra_context += "\nनोटबंदी जानकारी: 8 नवंबर 2016 को नोटबंदी हुई थी, और उसके ठीक 2 दिन बाद 10 नवंबर 2016 को मेरा जन्म हुआ था।"
 
     hist = ""
     if history:
-        hist = "पिछली बातचीत:\n" + "\n".join([f"{'Q' if h.get('role')=='user' else 'A'}: {h.get('text','')}" for h in history[-3:]]) + "\n"
+        hist = "पिछली बात:\n" + "\n".join([f"{'Q' if h.get('role')=='user' else 'A'}: {h.get('text','')}" for h in history[-2:]]) + "\n"
 
+    t_title = get_teacher_title(vname, lang_code)
     rel_instruction = ""
     if vrel == "Papa":
-        rel_instruction = "सामने तुम्हारे पापा (जिगर पटेल) बात कर रहे हैं। उन्हें केवल 'पापा' कहकर आदर से बात करो, कभी भी उनका नाम 'Jigar' मत लो!\n"
+        rel_instruction = "सामने तुम्हारे पापा (जिगर पटेल) हैं। उन्हें केवल 'पापा' कहो, कभी भी उनका नाम मत लो!\n"
     elif vrel == "Mummy":
-        rel_instruction = "सामने तुम्हारी मम्मी (भावना पटेल) बात कर रही हैं। उन्हें केवल 'मम्मी' कहकर प्यार से बात करो, कभी भी उनका नाम 'Bhavna' या 'भावनाबेन' मत लो!\n"
+        rel_instruction = "सामने तुम्हारी मम्मी (भावना पटेल) हैं। उन्हें केवल 'मम्मी' कहो (गुजराती में 'મમ્મી'), कभी भी उनका नाम मत लो!\n"
     elif vrel == "Chacha":
-        rel_instruction = "सामने तुम्हारे चाचा बात कर रहे हैं। उन्हें आदर से 'चाचाजी' या 'अमित चाचा' कहो, केवल नाम मत लो।\n"
+        rel_instruction = "सामने तुम्हारे चाचाजी हैं। उन्हें आदर से 'चाचाजी' (गुजराती में 'કાકા') कहो।\n"
     elif vrel == "Chachi":
-        rel_instruction = "सामने तुम्हारी चाची बात कर रही हैं। उन्हें आदर से 'चाचीजी' कहो।\n"
+        rel_instruction = "सामने तुम्हारी चाचीजी हैं। उन्हें आदर से 'चाचीजी' कहो।\n"
     elif vrel in ["Dadaji", "Dadiji"]:
-        rel_instruction = f"सामने तुम्हारे {get_address_term(vname, vrel)} बात कर रहे हैं। उन्हें पूरे आदर से संबोधित करो।\n"
+        rel_instruction = f"सामने तुम्हारे {get_address_term(vname, vrel, lang_code)} हैं। उन्हें आदर से संबोधित करो।\n"
     elif vrel == "Teacher":
-        rel_instruction = f"सामने स्कूल के शिक्षक/जज ({vname}) हैं। उन्हें आदर से 'सर' या 'मैम' कहकर जवाब दो।\n"
+        rel_instruction = f"सामने स्कूल के शिक्षक ({vname}) हैं। उन्हें आदर से केवल '{t_title}' कहकर जवाब दो।\n"
     elif vname and vname.lower() != "guest":
-        rel_instruction = f"सामने बात करने वाले दोस्त/विज़िटर का नाम '{vname}' है (रिश्ता: {vrel})। हर वाक्य में बार-बार नाम मत रटो, केवल तभी नाम लो जब ज़रूरी लगे।\n"
+        rel_instruction = f"सामने दोस्त/विज़िटर '{vname}' है (रिश्ता: {vrel})। हर वाक्य में नाम मत रटो, एकदम दोस्ताना और नेचुरल बात करो।\n"
 
     prompt = (
-        "तुम 10 साल के समझदार और जिंदादिल छात्र 'सार्थक पटेल' (गोटू) हो।\n"
-        "तुम्हारी बातचीत एकदम असली इंसान (NotebookLM पॉडकास्ट स्टाइल) जैसी स्वाभाविक होनी चाहिए।\n" + rel_instruction +
-        "सख्त नियम:\n"
-        "1. हर जवाब में सामने वाले का नाम बार-बार मत दोहराओ, एकदम नेचुरल बात करो।\n"
-        "2. बिना पूछे हर सवाल में 'आलू की सब्जी और भाखरी' या 'मेरी तबियत ठीक नहीं थी' का रट्टा बिल्कुल मत लगाओ! सामान्य सवाल का सीधा और समझदारी भरा जवाब दो।\n"
-        "3. हमेशा खुद के लिए 'मैं' बोलो, कभी 'सार्थक ऐसा करेगा' मत बोलो।\n"
-        "4. मेरा जन्म 10 नवंबर 2016 (गुरुवार) को कलोल में हुआ था (8 नवंबर 2016 की नोटबंदी मेरे जन्म से 2 दिन पहले हुई थी)।\n"
-        "5. " + len_rule + "\n"
-        "6. " + LANG_RULES.get(lang_code, LANG_RULES["hi-IN"]) + "\n"
-        "मेरी जानकारी:\n" + SARTHAK_DETAILS + "\n" + EXTRA_FACTS + "\n" + hist +
+        "तुम 10 साल के समझदार, प्यारे और जिंदादिल छात्र 'सार्थक पटेल' (गोटू) हो।\n" + rel_instruction +
+        "नियम:\n"
+        "1. हर जवाब में नाम बार-बार मत दोहराओ और बिना पूछे 'आलू-भाखरी', 'नोटबंदी' या 'प्लेन क्रैश' का जिक्र मत करो।\n"
+        "2. गणित के सवाल में '$' चिन्ह मत लगाओ और हमेशा पूरा वाक्य खत्म करो।\n"
+        "3. " + len_rule + "\n"
+        "4. " + LANG_RULES.get(lang_code, LANG_RULES["hi-IN"]) + "\n"
+        "मेरी जानकारी:\n" + SARTHAK_DETAILS + extra_context + "\n" + hist +
         "सवाल: " + user_text + "\nउत्तर:"
     )
 
@@ -322,13 +396,13 @@ def get_ai_reply(user_text, lang_code, history):
             res = ai_client.models.generate_content(
                 model="gemini-flash-lite-latest",
                 contents=prompt,
-                config=types.GenerateContentConfig(max_output_tokens=max_tok, temperature=0.45)
+                config=types.GenerateContentConfig(max_output_tokens=max_tok, temperature=0.4)
             )
-            ans = clean_ai_text(res.text, vname, vrel)
+            ans = clean_ai_text(res.text, vname, vrel, lang_code)
             if ans:
                 break
         except Exception:
-            time.sleep(0.3)
+            time.sleep(0.2)
 
     if not ans:
         if lang_code == "gu-IN":
@@ -337,6 +411,8 @@ def get_ai_reply(user_text, lang_code, history):
             return "The connection is a bit slow right now, please ask again."
         return "अभी नेटवर्क थोड़ा धीमा है, कृपया एक बार फिर से पूछें।"
 
+    if not history and len(REPLY_CACHE) < 300:
+        REPLY_CACHE[cache_k] = ans
     return ans
 
 DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
@@ -352,9 +428,10 @@ DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
   .stats { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
   .stat-box { background: #1e293b; padding: 10px 14px; border-radius: 10px; border-left: 4px solid #38bdf8; font-size: 13px; }
   .stat-box span { font-size: 17px; font-weight: bold; color: #4ade80; }
-  .btns { display: flex; gap: 8px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn { padding: 8px 13px; border: none; border-radius: 7px; font-weight: bold; cursor: pointer; font-size: 12px; }
   .btn-ref { background: #0284c7; color: #fff; }
+  .btn-doc { background: #16a34a; color: #fff; }
   .btn-clr { background: #ef4444; color: #fff; }
   table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 10px; overflow: hidden; }
   th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
@@ -368,7 +445,7 @@ DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
     <h1><span class="live-dot"></span>SarthakRobo Direct Firebase Admin</h1>
     <div class="btns">
       <button class="btn btn-ref" onclick="fetchFirebaseLogs()">🔄 Refresh Now</button>
-      <button class="btn" style="background:#16a34a;color:#fff;" onclick="downloadDocReport()">📥 Download .DOC</button>
+      <button class="btn btn-doc" onclick="downloadDocReport()">📥 Download .DOC</button>
       <button class="btn btn-clr" onclick="clearFirebaseLogs()">🗑 Clear Firebase</button>
     </div>
   </div>
@@ -399,6 +476,7 @@ async function fetchFirebaseLogs() {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">No logs found in Firebase.</td></tr>';
       document.getElementById("stTotal").innerText = "0";
       document.getElementById("stUnique").innerText = "0";
+      window.latestFirebaseItems = [];
       return;
     }
     let items = Object.values(data).filter(x => x && typeof x === "object");
@@ -423,7 +501,6 @@ async function fetchFirebaseLogs() {
   }
 }
 
-
 function downloadDocReport() {
   if (!window.latestFirebaseItems || window.latestFirebaseItems.length === 0) {
     alert("No data available to download yet!");
@@ -444,7 +521,7 @@ function downloadDocReport() {
     doc += "<tr><td>" + (l.time || "") + "</td><td><b>" + (l.visitor_name || "Guest") + "</b></td><td>" + (l.action || "") + "</td><td>" + (l.details || "") + "</td></tr>";
   }
   doc += "</table></body></html>";
-  let blob = new Blob(['\ufeff', doc], { type: 'application/msword;charset=utf-8' });
+  let blob = new Blob(['\\ufeff', doc], { type: 'application/msword;charset=utf-8' });
   let url = URL.createObjectURL(blob);
   let a = document.createElement("a");
   a.href = url;
@@ -524,6 +601,8 @@ def register_ai_routes(app):
 
     @app.route('/admin/clear', methods=['POST'])
     def clear_logs():
+        global MEM_LOGS
+        MEM_LOGS = []
         if os.path.exists(LOG_FILE):
             os.remove(LOG_FILE)
         try:
