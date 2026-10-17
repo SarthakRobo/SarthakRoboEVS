@@ -368,6 +368,7 @@ DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
     <h1><span class="live-dot"></span>SarthakRobo Direct Firebase Admin</h1>
     <div class="btns">
       <button class="btn btn-ref" onclick="fetchFirebaseLogs()">🔄 Refresh Now</button>
+      <button class="btn" style="background:#16a34a;color:#fff;" onclick="downloadDocReport()">📥 Download .DOC</button>
       <button class="btn btn-clr" onclick="clearFirebaseLogs()">🗑 Clear Firebase</button>
     </div>
   </div>
@@ -402,6 +403,7 @@ async function fetchFirebaseLogs() {
     }
     let items = Object.values(data).filter(x => x && typeof x === "object");
     items.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    window.latestFirebaseItems = items;
     document.getElementById("stTotal").innerText = items.length;
     document.getElementById("stUnique").innerText = new Set(items.map(x => x.visitor_id)).size;
     document.getElementById("stStatus").innerText = "Live (" + new Date().toLocaleTimeString() + ")";
@@ -419,6 +421,37 @@ async function fetchFirebaseLogs() {
   } catch (err) {
     document.getElementById("stStatus").innerText = "Offline / Retrying...";
   }
+}
+
+
+function downloadDocReport() {
+  if (!window.latestFirebaseItems || window.latestFirebaseItems.length === 0) {
+    alert("No data available to download yet!");
+    return;
+  }
+  let items = window.latestFirebaseItems;
+  let aiChats = items.filter(x => x.action === "AI Chat");
+  let doc = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>SarthakRobo Report</title>";
+  doc += "<style>body{font-family:Arial,sans-serif;padding:15px}h1{color:#0284c7}h2{background:#e0f2fe;padding:6px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #64748b;padding:7px;text-align:left;font-size:13px}th{background:#0284c7;color:#fff}</style></head><body>";
+  doc += "<h1>🤖 SarthakRobo - AI Research Report</h1>";
+  doc += "<p><b>Total Actions:</b> " + items.length + " | <b>Total AI Chats:</b> " + aiChats.length + "</p>";
+  doc += "<h2>Part 1: AI Chat Questions & Answers (For Research)</h2><table><tr><th>Time</th><th>Visitor (Relation)</th><th>Question & Answer</th></tr>";
+  for (let c of aiChats) {
+    doc += "<tr><td>" + (c.time || "") + "</td><td><b>" + (c.visitor_name || "Guest") + "</b></td><td>" + (c.details || "") + "</td></tr>";
+  }
+  doc += "</table><h2>Part 2: All Visitor Activity</h2><table><tr><th>Time</th><th>Visitor</th><th>Type</th><th>Details</th></tr>";
+  for (let l of items) {
+    doc += "<tr><td>" + (l.time || "") + "</td><td><b>" + (l.visitor_name || "Guest") + "</b></td><td>" + (l.action || "") + "</td><td>" + (l.details || "") + "</td></tr>";
+  }
+  doc += "</table></body></html>";
+  let blob = new Blob(['\ufeff', doc], { type: 'application/msword;charset=utf-8' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "Sarthak_Research_Report.doc";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 async function clearFirebaseLogs() {
