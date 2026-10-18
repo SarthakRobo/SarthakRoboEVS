@@ -24,8 +24,44 @@ LAST_SLIDE_LOG = {}
 FEMALE_TEACHERS = ["priyanka", "jayshree", "maheshwari", "sakshi", "binal", "beena", "bina", "प्रियंका", "जयश्री", "महेश्वरी", "माहेश्वरी", "साक्षी", "बिनल", "પ્રિયંકા", "જયશ્રી", "મહેશ્વરી", "સાક્ષી", "બિનલ"]
 MALE_TEACHERS = ["sath", "saath", "vraj", "mayank", "mahesh", "साथ", "सांथ", "व्रज", "ब्रज", "मयंक", "महेश", "સાથ", "વ્રજ", "મયંક", "મહેશ"]
 
+DAYS_HI = ["सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार", "रविवार"]
+DAYS_GU = ["સોમવાર", "મંગળવાર", "બુધવાર", "ગુરુવાર", "શુક્રવાર", "શનિવાર", "રવિવાર"]
+
+def get_ist_now():
+    return datetime.utcnow() + timedelta(hours=5, minutes=30)
+
 def get_ist_time():
-    return (datetime.utcnow() + timedelta(hours=5, minutes=30)).strftime("%d-%b %I:%M:%S %p")
+    return get_ist_now().strftime("%d-%b %I:%M:%S %p")
+
+def get_live_time_context():
+    now = get_ist_now()
+    day_idx = now.weekday()  # 0=Mon, 6=Sun
+    day_hi = DAYS_HI[day_idx]
+    time_str = now.strftime("%I:%M %p")
+    date_str = now.strftime("%d %B %Y")
+    hr = now.hour + (now.minute / 60.0)
+
+    if day_idx == 6:
+        routine_now = "आज रविवार (Sunday) है, इसलिए आज मेरे स्कूल और ट्यूशन की छुट्टी है! आज मैं घर पर हूँ, आराम से पढ़ाई, अपने रोबोटिक्स प्रोजेक्ट की प्रैक्टिस और दोस्तों के साथ खेलकूद कर रहा हूँ। (अगर कोई पूछे आज स्कूल क्यों नहीं गए, तो साफ बताना कि आज रविवार की छुट्टी है)।"
+    else:
+        if 6.0 <= hr < 7.0:
+            routine_now = "अभी सुबह का समय है और मैं स्कूल जाने के लिए तैयार हो रहा हूँ।"
+        elif 7.0 <= hr < 13.0:
+            routine_now = "अभी सुबह 7 से दोपहर 1 बजे के बीच स्कूल का समय है, मैं एसवीएम इंटरनेशनल स्कूल में पढ़ाई कर रहा हूँ।"
+        elif 13.0 <= hr < 16.0:
+            routine_now = "अभी दोपहर का समय है, मैं स्कूल से घर आ चुका हूँ और मम्मी के हाथ का दोपहर का खाना खाकर थोड़ा आराम कर रहा हूँ।"
+        elif 16.0 <= hr < 17.5:
+            routine_now = "अभी शाम के ट्यूशन और स्कूल का होमवर्क पूरा करने का समय है।"
+        elif 17.5 <= hr < 19.0:
+            routine_now = "अभी शाम को सोसाइटी में हेत और दोस्तों के साथ क्रिकेट खेलने का समय है।"
+        elif 19.0 <= hr < 20.5:
+            routine_now = "अभी शाम को पापा के साथ कंप्यूटर पर रोबोटिक्स और कोडिंग सीखने का समय है।"
+        elif 20.5 <= hr < 22.0:
+            routine_now = "अभी रात के खाने (डिनर) के बाद परिवार के साथ बैठने और अगले दिन का बैग पैक करने का समय है।"
+        else:
+            routine_now = "अभी रात को आराम करने और सोने का समय है।"
+
+    return f"\n[अभी का लाइव समय और वार]: आज की तारीख {date_str}, वार '{day_hi}' है, और अभी घड़ी में '{time_str}' बजे हैं। {routine_now}\n"
 
 def get_visitor_info():
     vname = "Guest"
@@ -146,7 +182,6 @@ def save_log(action, details, custom_name=None, custom_rel=None):
     try:
         vid = getattr(g, "visitor_id", None) or request.cookies.get("sarthak_vid", "new_user")
         now_ts = time.time()
-        # Prevent duplicate rapid slide spam within 0.8s so server stays lightning fast
         if "Slide" in action:
             last_t = LAST_SLIDE_LOG.get(vid, 0)
             if now_ts - last_t < 0.8:
@@ -278,7 +313,6 @@ def clean_ai_text(text, vname, vrel, lang_code="hi-IN"):
             text = re.sub(r"^सर,\s*", "मैम, ", text)
             text = re.sub(r"^સર,\s*", "મેડમ, ", text)
 
-    # Ensure sentence never ends abruptly mid-word if token limit hit
     if text and text[-1] not in [".", "।", "!", "?"]:
         last_p = max(text.rfind("।"), text.rfind("!"), text.rfind("?"), text.rfind("."))
         if last_p > len(text) * 0.45:
@@ -301,7 +335,6 @@ def generate_voice_b64(text, lang_code):
     if key in AUDIO_CACHE:
         return AUDIO_CACHE[key]
     voice, tl = detect_best_voice(text, lang_code)
-    # Fast TTS up to 220 chars for 3x faster voice generation
     if len(text) <= 220:
         try:
             url = "https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=" + tl + "&q=" + urllib.parse.quote(text)
@@ -342,17 +375,18 @@ def get_ai_reply(user_text, lang_code, history):
     if fast_ans and len(user_text.split()) <= 6:
         return fast_ans
 
-    cache_k = f"{lang_code}:{vname}:{vrel}:{user_text.lower()}"
-    if not history and cache_k in REPLY_CACHE:
+    low_u = user_text.lower()
+    is_time_query = any(w in low_u for w in ["बजे", "समय", "टाइम", "time", "वार", "दिन", "आज", "अभी", "संडे", "sunday", "रविवार", "छुट्टी", "स्कूल क्यों नहीं"])
+
+    cache_k = f"{lang_code}:{vname}:{vrel}:{low_u}"
+    if not history and not is_time_query and cache_k in REPLY_CACHE:
         return REPLY_CACHE[cache_k]
 
-    wants_long = any(w in user_text.lower() for w in ["5 लाइन", "पाँच लाइन", "पांच लाइन", "10 लाइन", "5 line", "five line", "विस्तार", "डिटेल", "पूरा बताओ", "भाषण", "निबंध"])
+    wants_long = any(w in low_u for w in ["5 लाइन", "पाँच लाइन", "पांच लाइन", "10 लाइन", "5 line", "five line", "विस्तार", "डिटेल", "पूरा बताओ", "भाषण", "निबंध"])
     max_tok = 260 if wants_long else 135
     len_rule = "सामने वाले ने विस्तार से या 5 लाइन मांगी हैं, इसलिए बिना मना किए पूरे 5 छोटे वाक्यों में जानकारी दो।" if wants_long else "जवाब 1 से 2 छोटे, पूर्ण और स्वाभाविक वाक्यों में दो (वाक्य कभी अधूरा मत छोड़ना)।"
 
-    # Only include Flight 171 or Notebandi context when user actually asks about it
-    extra_context = ""
-    low_u = user_text.lower()
+    extra_context = get_live_time_context()
     if any(k in low_u for k in ["171", "क्रैश", "crash", "प्लेन", "plane", "विमान", "एरोप्लेन", "12 जून", "13 जून"]):
         extra_context += "\nताज़ा जानकारी: 12 जून 2025 को अहमदाबाद में एयर इंडिया की फ्लाइट 171 (Air India Flight 171) का विमान हादसा हुआ था।"
     if any(k in low_u for k in ["नोटबंदी", "notebandi", "demonetization", "8 नवंबर", "न्यूज़", "खबर"]):
@@ -384,8 +418,9 @@ def get_ai_reply(user_text, lang_code, history):
         "नियम:\n"
         "1. हर जवाब में नाम बार-बार मत दोहराओ और बिना पूछे 'आलू-भाखरी', 'नोटबंदी' या 'प्लेन क्रैश' का जिक्र मत करो।\n"
         "2. गणित के सवाल में '$' चिन्ह मत लगाओ और हमेशा पूरा वाक्य खत्म करो।\n"
-        "3. " + len_rule + "\n"
-        "4. " + LANG_RULES.get(lang_code, LANG_RULES["hi-IN"]) + "\n"
+        "3. समय, वार या अभी क्या कर रहे हो पूछे जाने पर नीचे दिए गए [अभी का लाइव समय और वार] के अनुसार एकदम सटीक जवाब दो।\n"
+        "4. " + len_rule + "\n"
+        "5. " + LANG_RULES.get(lang_code, LANG_RULES["hi-IN"]) + "\n"
         "मेरी जानकारी:\n" + SARTHAK_DETAILS + extra_context + "\n" + hist +
         "सवाल: " + user_text + "\nउत्तर:"
     )
@@ -411,7 +446,7 @@ def get_ai_reply(user_text, lang_code, history):
             return "The connection is a bit slow right now, please ask again."
         return "अभी नेटवर्क थोड़ा धीमा है, कृपया एक बार फिर से पूछें।"
 
-    if not history and len(REPLY_CACHE) < 300:
+    if not history and not is_time_query and len(REPLY_CACHE) < 300:
         REPLY_CACHE[cache_k] = ans
     return ans
 
@@ -425,12 +460,17 @@ DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
   body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; padding: 14px; margin: 0; }
   .top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
   h1 { color: #38bdf8; font-size: 19px; margin: 0; }
-  .stats { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-  .stat-box { background: #1e293b; padding: 10px 14px; border-radius: 10px; border-left: 4px solid #38bdf8; font-size: 13px; }
-  .stat-box span { font-size: 17px; font-weight: bold; color: #4ade80; }
+  .stats { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .stat-box { background: #1e293b; padding: 9px 13px; border-radius: 10px; border-left: 4px solid #38bdf8; font-size: 13px; }
+  .stat-box span { font-size: 16px; font-weight: bold; color: #4ade80; }
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; background: #1e293b; padding: 10px; border-radius: 10px; align-items: center; }
+  .filter-bar input, .filter-bar select { background: #0f172a; color: #fff; border: 1px solid #38bdf8; padding: 8px 10px; border-radius: 7px; font-size: 13px; outline: none; }
+  .filter-bar input { flex: 1; min-width: 160px; }
   .btns { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn { padding: 8px 13px; border: none; border-radius: 7px; font-weight: bold; cursor: pointer; font-size: 12px; }
   .btn-ref { background: #0284c7; color: #fff; }
+  .btn-ai { background: #8b5cf6; color: #fff; border: 2px solid transparent; }
+  .btn-ai.active { background: #f59e0b; color: #000; border-color: #fff; }
   .btn-doc { background: #16a34a; color: #fff; }
   .btn-clr { background: #ef4444; color: #fff; }
   table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 10px; overflow: hidden; }
@@ -442,17 +482,25 @@ DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
 </head>
 <body>
   <div class="top-bar">
-    <h1><span class="live-dot"></span>SarthakRobo Direct Firebase Admin</h1>
+    <h1><span class="live-dot"></span>SarthakRobo Smart Firebase Admin</h1>
     <div class="btns">
-      <button class="btn btn-ref" onclick="fetchFirebaseLogs()">🔄 Refresh Now</button>
+      <button class="btn btn-ref" onclick="fetchFirebaseLogs()">🔄 Refresh</button>
       <button class="btn btn-doc" onclick="downloadDocReport()">📥 Download .DOC</button>
-      <button class="btn btn-clr" onclick="clearFirebaseLogs()">🗑 Clear Firebase</button>
+      <button class="btn btn-clr" onclick="clearFirebaseLogs()">🗑 Clear</button>
     </div>
   </div>
   <div class="stats">
-    <div class="stat-box">Total Actions: <span id="stTotal">0</span></div>
+    <div class="stat-box">Showing: <span id="stShowing">0</span> / <span id="stTotal">0</span></div>
+    <div class="stat-box">AI Chats: <span id="stAIChats">0</span></div>
     <div class="stat-box">Unique Visitors: <span id="stUnique">0</span></div>
-    <div class="stat-box">Live Sync: <span id="stStatus">Connected (Auto 5s)</span></div>
+    <div class="stat-box">Live Sync: <span id="stStatus">Connected</span></div>
+  </div>
+  <div class="filter-bar">
+    <button id="btnOnlyAI" class="btn btn-ai" onclick="toggleOnlyAI()">💬 Show Only AI Chats: OFF</button>
+    <select id="visitorFilter" onchange="renderFilteredLogs()">
+      <option value="ALL">👤 All Visitors (सभी विज़िटर)</option>
+    </select>
+    <input type="text" id="searchBox" placeholder="🔍 नाम, सवाल या जवाब खोजें (Search)..." oninput="renderFilteredLogs()" />
   </div>
   <div style="overflow-x:auto">
     <table>
@@ -466,36 +514,89 @@ DIRECT_FIREBASE_ADMIN_HTML = """<!DOCTYPE html>
   </div>
 <script>
 const FB_URL = "https://sarthakrobo1-default-rtdb.firebaseio.com/sarthak_logs.json";
+window.latestFirebaseItems = [];
+window.onlyAIChats = false;
+
+function toggleOnlyAI() {
+  window.onlyAIChats = !window.onlyAIChats;
+  const btn = document.getElementById("btnOnlyAI");
+  if (window.onlyAIChats) {
+    btn.classList.add("active");
+    btn.innerText = "💬 Only AI Chats: ON ✓";
+  } else {
+    btn.classList.remove("active");
+    btn.innerText = "💬 Show Only AI Chats: OFF";
+  }
+  renderFilteredLogs();
+}
+
+function updateVisitorDropdown(items) {
+  const sel = document.getElementById("visitorFilter");
+  const currentVal = sel.value || "ALL";
+  const names = Array.from(new Set(items.map(x => x.visitor_name || "Guest"))).sort();
+  let html = '<option value="ALL">👤 All Visitors (' + names.length + ')</option>';
+  for (let n of names) {
+    let selected = (n === currentVal) ? " selected" : "";
+    html += `<option value="${n}"${selected}>${n}</option>`;
+  }
+  sel.innerHTML = html;
+}
+
+function renderFilteredLogs() {
+  const tbody = document.getElementById("logTableBody");
+  const vFilter = document.getElementById("visitorFilter").value;
+  const q = (document.getElementById("searchBox").value || "").toLowerCase().trim();
+  let items = window.latestFirebaseItems || [];
+
+  let filtered = items.filter(l => {
+    if (window.onlyAIChats && l.action !== "AI Chat") return false;
+    if (vFilter !== "ALL" && (l.visitor_name || "Guest") !== vFilter) return false;
+    if (q) {
+      let combined = ((l.visitor_name || "") + " " + (l.details || "") + " " + (l.action || "")).toLowerCase();
+      if (!combined.includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById("stShowing").innerText = filtered.length;
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">कोई रिकॉर्ड नहीं मिला (No matching logs).</td></tr>';
+    return;
+  }
+  let html = "";
+  for (let l of filtered) {
+    html += `<tr>
+      <td>${l.time || ""}</td>
+      <td><b style="color:#4ade80">${l.visitor_name || "Guest"}</b><br><code style="font-size:11px;color:#94a3b8">${l.visitor_id || ""}</code></td>
+      <td><span class="badge">${l.action || ""}</span></td>
+      <td><b>${l.details || ""}</b></td>
+      <td style="color:#94a3b8;font-size:11px;">${l.device || ""}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+}
 
 async function fetchFirebaseLogs() {
   try {
     const res = await fetch(FB_URL + "?t=" + Date.now());
     const data = await res.json();
-    const tbody = document.getElementById("logTableBody");
     if (!data) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">No logs found in Firebase.</td></tr>';
-      document.getElementById("stTotal").innerText = "0";
-      document.getElementById("stUnique").innerText = "0";
       window.latestFirebaseItems = [];
+      document.getElementById("stTotal").innerText = "0";
+      document.getElementById("stAIChats").innerText = "0";
+      document.getElementById("stUnique").innerText = "0";
+      renderFilteredLogs();
       return;
     }
     let items = Object.values(data).filter(x => x && typeof x === "object");
     items.sort((a, b) => (b.ts || 0) - (a.ts || 0));
     window.latestFirebaseItems = items;
     document.getElementById("stTotal").innerText = items.length;
+    document.getElementById("stAIChats").innerText = items.filter(x => x.action === "AI Chat").length;
     document.getElementById("stUnique").innerText = new Set(items.map(x => x.visitor_id)).size;
     document.getElementById("stStatus").innerText = "Live (" + new Date().toLocaleTimeString() + ")";
-    let html = "";
-    for (let l of items) {
-      html += `<tr>
-        <td>${l.time || ""}</td>
-        <td><b style="color:#4ade80">${l.visitor_name || "Guest"}</b><br><code style="font-size:11px;color:#94a3b8">${l.visitor_id || ""}</code></td>
-        <td><span class="badge">${l.action || ""}</span></td>
-        <td><b>${l.details || ""}</b></td>
-        <td style="color:#94a3b8;font-size:11px;">${l.device || ""}</td>
-      </tr>`;
-    }
-    tbody.innerHTML = html;
+    updateVisitorDropdown(items);
+    renderFilteredLogs();
   } catch (err) {
     document.getElementById("stStatus").innerText = "Offline / Retrying...";
   }
