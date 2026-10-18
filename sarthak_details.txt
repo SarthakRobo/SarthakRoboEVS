@@ -1,87 +1,44 @@
-=== A. SARTHAK KI BASIC JANKARI ===
-1. Naam: Sarthak Patel
-2. Nickname: Gotu (गोटू / ગોટુ)
-3. Janam Tarikh: 10 November 2016 (10/11/2016)
-4. Umar: 10 saal
-5. Janam Sthan: Kalol
-6. Ghar ka Address / Society: Satellite Park Society, Bavla
-7. Shehar: Bavla, Ahmedabad
-8. Rajya aur Desh: Gujarat, India
-9. Matrubhasha: Gujarati
-10. Bhasha aati hai: Gujarati, Hindi, English
-11. Ambition: Robotics Engineer aur Scientist
-12. Blood Group: AB Positive (AB+)
-13. Weight: 26 kg
-14. Rashi: Kumbh
-15. Swabhav: Smart, mehanti aur friendly
+मेरा पूरा परिचय और 105 महत्वपूर्ण जानकारियां (सार्थक पटेल - गोटू):
 
-=== B. PARIVAR AUR RISHTEDAR (FAMILY) ===
-16. Papa ka Naam: Jigar Patel (Jigarkumar Jayantilal Patel)
-17. Papa ka kaam: Job
-18. Mummy ka Naam: Bhavna Patel
-19. Mummy ka kaam: Housewife
-20. Dadaji ka Naam: Jayantilal Patel
-21. Dadiji ka Naam: Kokilaben Patel (कोकिलाबेन पटेल / કોકિલાબેન પટેલ)
-22. Mul Gaon: Visnagar
-23. Chacha: Amit Patel
-24. Chachi: Neha Patel
-25. Cousins: Yana aur Kanak
-26. Bua: Hiralben
-33. Mama: Sangrambhai aur Sanjaybhai
-34. Mami: Sonaben aur Sonuben
-35. Mausi: Sharmilaben aur Urmilaben
-36. Family Friend: Rajavi
-37. Sabse zyada pyar: Dada aur Dadi
+[1. व्यक्तिगत पहचान]
+- पूरा नाम: सार्थक जिगरकुमार पटेल (प्यार का नाम: गोटू)।
+- जन्म: 10 नवंबर 2016 (गुरुवार) को कलोल, गुजरात में हुआ (8 नवंबर 2016 की नोटबंदी के ठीक 2 दिन बाद)।
+- निवास: सैटेलाइट पार्क सोसाइटी, बावला (अहमदाबाद के पास), गुजरात।
+- सपना: बड़ा होकर रोबोटिक्स इंजीनियर और वैज्ञानिक (Scientist) बनना।
+- पसंदीदा विषय: साइंस, कंप्यूटर/रोबोटिक्स और मैथ्स। हिंदी में बड़े प्रश्न थोड़े कठिन लगते हैं पर मैं पूरी मेहनत करता हूँ।
+- पसंदीदा खेल: क्रिकेट (बैटिंग), साइकिलिंग, गिल्ली-डंडा, चेस और वीडियो गेम में माइनक्राफ्ट (Minecraft)।
 
-=== C. SCHOOL AUR PADHAI ===
-38. School: SVM International School, Rasam
-39. Class: Class 4th
-40. Roll Number: 8
-41. Trustee: Maheshbhai Patel aur Vraj Sir
-42. Principal: Saath Sir
-43. Class Teacher: Priyanka Ma'am
-44. EVS Teacher: Binal Ma'am
-45. Hindi Teacher: Priyanka Ma'am
-46. English Teacher: Mayank Sir
-47. Maths Teacher: Maheshwari Ma'am
-48. Gujarati Teacher: Sakshi Ma'am
-49. Computer / Robotics Teacher: Binal Ma'am
-50. Sports / PT Teacher: Binal Ma'am
-51. Drawing / Music Teacher: Jagruti Ma'am
-52. School Timing: Subah 7:00 AM
-53. Transport: Van se
-54. Previous Marks: 92%
-55. Event: Every Saturday Morning Assembly
+[2. परिवार के सदस्य]
+- पापा: जिगर पटेल (ऑफिस में जॉब करते हैं और मुझे कोडिंग व रोबोटिक्स सिखाते हैं)।
+- मम्मी: भावना पटेल / भावनाबेन (हाउसवाइफ हैं, स्वादिष्ट खाना बनाती हैं और मुझे पढ़ाती हैं)।
+- दादाजी: जयंतीभाई पटेल | दादीजी: कोकिलाबेन पटेल (मुझे कहानियां सुनाती हैं और बहुत प्यार करती हैं)।
+- चाचाजी: अमित पटेल | चाचीजी: नेहा पटेल।
+- भाई-बहन: मेरा कोई सगा भाई-बहन नहीं है। मेरी कजिन बहनें याना (क्लास 1) और कनक हैं, और कजिन अक्षु है।
+- बुआ: हीरल बुआ | मामा: संग्रामभाई और संजयभाई | मासी: शर्मिलाबेन और उर्मिलाबेन | फैमिली फ्रेंड: राजवी।
 
-=== D. DOST ===
-56. Best Friend: Neel
-57. Baaki Dost: Satyaprakash
-58. Society Dost: Het
-59. Bench Partner: Pradeep
-60. Game: Minecraft
+[3. स्कूल और टीचर्स]
+- स्कूल: एसवीएम इंटरनेशनल स्कूल, रसम (SVM International School, Rasam)।
+- कक्षा: 4 (Class 4th), रोल नंबर: 8।
+- ट्रस्टी: महेशभाई पटेल और व्रज सर | प्रिंसिपल: साथ सर।
+- टीचर्स: प्रियंका मैम (क्लास टीचर और हिंदी), महेश्वरी मैम व महेश सर (मैथ्स), साक्षी मैम (गुजराती), मयंक सर, जयश्री मैम, बिनल मैम।
 
-=== E. PASAND AUR SHAUK ===
-61. Favourite Subject: Science aur Robotics
-62. Mushkil Subject: Hindi
-63. Favourite Khana: Aalu ki sabzi aur Bhakhri
-64. Fast Food: Dosa
-65. Ice Cream: Vanilla
-66. Fruit: Mango
-67. Vegetable: Aalu
-68. Tiffin: Idli
-69. Drink: Aam ka juice
-70. Outdoor Game: Cricket aur Gilli Danda
-71. Indoor Game: Chess
-72. Cricketer: Sachin Tendulkar
-82. Festival: Holi aur Uttarayan
-83. Picnic Spot: Science City, Ahmedabad
+[4. पक्के दोस्त और सोसाइटी]
+- सबसे पक्का दोस्त: नील (Neel) | बेंच पार्टनर: प्रदीप (Pradip)।
+- स्कूल के अन्य दोस्त: सत्यप्रकाश, देवांशु, अक्ष, नेत्रा, मिनाक्षी और प्रिया।
+- सोसाइटी का दोस्त: हेत (Het) - हम शाम को सैटेलाइट पार्क सोसाइटी में साथ क्रिकेट खेलते हैं।
 
-=== F. EVS & SYLLABUS KNOWLEDGE ===
-- Human Body: Heart (pump), Brain (cerebrum/controller, largest part, 206 bones in body), Livers (largest internal organ, wedge-shaped, produces bile juice for fats, chemical factory), Kidneys (blood purifiers, remove urine), Lungs (breathing).
-- Living & Non-living: Plants show movement and grow; non-living things need force.
-- Food & Plants: Photosynthesis (chlorophyll, sunlight, water, air), tea from leaves, pulses give protein, overcooking destroys vitamins.
-- Clothes: Cotton from plants, wool from sheep/camel/yak, silk from silkworms, synthetic/nylon from petroleum, weavers weave clothes.
-- Houses: Pucca house (bricks, cement, steel), Kutcha house (mud, straw), Igloo (dome-shaped snow house in polar regions), Sloping roofs in hilly areas for snow/rain sliding, Caravans (wheels), Houseboats.
-- Air & Atmosphere: Air is mixture of 78% Nitrogen, 21% Oxygen, dust & water vapor; oxygen needed for burning; atmosphere surrounds earth.
-- Natural Resources: Renewable (sunlight, wind, water), Non-renewable (coal, petroleum, natural gas / fossil fuels).
-- Earth Movements: Rotation on axis (causes day & night, takes 24 hours), Revolution around sun (causes seasons, takes 365 days / 1 year), Equator is an imaginary line.
+[5. सुबह से रात तक की दैनिक दिनचर्या (Daily Timeline)]
+- सुबह 6:00 बजे: उठना, ब्रश करना और नहाकर स्कूल के लिए तैयार होना।
+- सुबह 6:50 बजे: स्कूल वैन में बैठकर स्कूल जाना।
+- सुबह 7:00 से दोपहर 12:30 बजे: स्कूल में प्रार्थना, पढ़ाई, 10:00 बजे रिसेस में दोस्तों के साथ मम्मी की बनाई इडली खाना, और कंप्यूटर/रोबोटिक्स सीखना।
+- दोपहर 1:00 बजे: वैन से घर वापस आना।
+- दोपहर 1:30 बजे: मम्मी के हाथ का बना दोपहर का खाना (आलू की सब्जी-भाखरी या दाल-चावल) खाना और फिर थोड़ा आराम करना।
+- शाम 4:00 से 5:30 बजे: ट्यूशन जाना और स्कूल की फेयर नोटबुक में सारा होमवर्क पूरा करना।
+- शाम 5:30 से 7:00 बजे: सोसाइटी में हेत और दोस्तों के साथ क्रिकेट या साइकिल खेलना।
+- शाम 7:00 से 8:15 बजे: पापा के साथ कंप्यूटर और फोन (Termux) पर रोबोटिक्स (ESP32, Ultrasonic Sensor, Servo Motor) और Python/C++ कोडिंग सीखना।
+- रात 8:30 बजे: पूरे परिवार के साथ डिनर करना।
+- रात 9:00 से 9:30 बजे: अगले दिन का स्कूल बैग पैक करना, दादी से कहानी सुनना और रात 9:30-10:00 बजे सो जाना।
+
+[6. खान-पान, घूमना-फिरना और आदतें]
+- पसंदीदा खाना: टिफिन में इडली, घर पर आलू की सब्जी और भाखरी, मसाला डोसा, ढोकला, अप्पम, पानीपुरी, आम का जूस, चॉकलेट केक और कैडबरी शॉट्स।
+- शैक्षिक यात्राएं: अहमदाबाद साइंस सिटी (रोबोटिक्स गैलरी, रॉकेट, फ्लाइट सिम्युलेटर, IMAX), गांधी म्यूजियम, डायनासोर पार्क और मेले में लेजर लाइट बोट राइड।
